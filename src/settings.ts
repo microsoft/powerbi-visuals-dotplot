@@ -24,123 +24,34 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual.settings {
-    export class DotPlotSettings {
-        public static get Default() {
-            return new this();
-        }
+module powerbi.extensibility.visual {
+    // powerbi.extensibility.utils.dataview
+    import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
-        public static parse(dataView: DataView, capabilities: VisualCapabilities) {
-            var settings = new this();
-            if (!dataView || !dataView.metadata || !dataView.metadata.objects) {
-                return settings;
-            }
+    // powerbi.extensibility.utils.chart
+    import dataLabelUtils = powerbi.extensibility.utils.chart.dataLabel.utils;
 
-            var properties = this.getProperties(capabilities);
-            for (var objectKey in capabilities.objects) {
-                for (var propKey in capabilities.objects[objectKey].properties) {
-                    if (!settings[objectKey] || !_.has(settings[objectKey], propKey)) {
-                        continue;
-                    }
+    export class CategoryAxisSettings {
+        public show: boolean = true;
+        public showAxisTitle: boolean = true;
+        public labelColor: string = dataLabelUtils.defaultLabelColor;
+    }
 
-                    var type = capabilities.objects[objectKey].properties[propKey].type;
-                    var getValueFn = this.getValueFnByType(type);
-                    settings[objectKey][propKey] = getValueFn(
-                        dataView.metadata.objects,
-                        properties[objectKey][propKey],
-                        settings[objectKey][propKey]);
-                }
-            }
+    export class DataPointSettings {
+        public fill: string = "#00B8AA";
+    }
 
-            return settings;
-        }
+    export class LabelsSettings {
+        public show: boolean = true;
+        public color: string = dataLabelUtils.defaultLabelColor;
+        public labelDisplayUnits: number = 0;
+        public labelPrecision: number = 2;
+        public fontSize: number = dataLabelUtils.DefaultFontSizeInPt;
+    };
 
-        public static getProperties(capabilities: VisualCapabilities):
-            { [i: string]: { [i: string]: DataViewObjectPropertyIdentifier } } & {
-                general: { formatString: DataViewObjectPropertyIdentifier },
-                dataPoint: { fill: DataViewObjectPropertyIdentifier }
-            } {
-            var objects = _.merge({
-                general: { properties: { formatString: {} } }
-            }, capabilities.objects);
-            var properties = <any>{};
-            for (var objectKey in objects) {
-                properties[objectKey] = {};
-                for (var propKey in objects[objectKey].properties) {
-                    properties[objectKey][propKey] = <DataViewObjectPropertyIdentifier>{
-                        objectName: objectKey,
-                        propertyName: propKey
-                    };
-                }
-            }
-
-            return properties;
-        }
-
-        public static createEnumTypeFromEnum(type: any): IEnumType {
-            var even: any = false;
-            return createEnumType(Object.keys(type)
-                .filter((key, i) => ((!!(i % 2)) === even && type[key] === key
-                    && !void (even = !even)) || (!!(i % 2)) !== even)
-                .map(x => <IEnumMember>{ value: x, displayName: x }));
-        }
-
-        private static getValueFnByType(type: powerbi.data.DataViewObjectPropertyTypeDescriptor) {
-            switch (_.keys(type)[0]) {
-                case "fill":
-                    return DataViewObjects.getFillColor;
-                default:
-                    return DataViewObjects.getValue;
-            }
-        }
-
-        public static enumerateObjectInstances(
-            settings = new this(),
-            options: EnumerateVisualObjectInstancesOptions,
-            capabilities: VisualCapabilities): ObjectEnumerationBuilder {
-
-            var enumeration = new ObjectEnumerationBuilder();
-            var object = settings && settings[options.objectName];
-            if (!object) {
-                return enumeration;
-            }
-
-            var instance = <VisualObjectInstance>{
-                objectName: options.objectName,
-                selector: null,
-                properties: {}
-            };
-
-            for (var key in object) {
-                if (_.has(object, key)) {
-                    instance.properties[key] = object[key];
-                }
-            }
-
-            enumeration.pushInstance(instance);
-            return enumeration;
-        }
-
-        public originalSettings: DotPlotSettings;
-        public createOriginalSettings(): void {
-            this.originalSettings = _.cloneDeep(this);
-        }
-
-        //Default Settings
-        public categoryAxis = {
-            show: true,
-            showAxisTitle: true,
-            labelColor: dataLabelUtils.defaultLabelColor
-        };
-        public dataPoint = {
-            fill: "#00B8AA",
-        };
-        public labels = {
-            show: true,
-            color: dataLabelUtils.defaultLabelColor,
-            labelDisplayUnits: 0,
-            labelPrecision: 2,
-            fontSize: dataLabelUtils.DefaultFontSizeInPt
-        };
+    export class DotPlotSettings extends DataViewObjectsParser {
+        public categoryAxis: CategoryAxisSettings = new CategoryAxisSettings();
+        public dataPoint: DataPointSettings = new DataPointSettings();
+        public labels: LabelsSettings = new LabelsSettings();
     }
 }

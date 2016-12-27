@@ -24,25 +24,38 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual.behavior {
+module powerbi.extensibility.visual {
+    // d3
+    import Selection = d3.Selection;
+
+    // powerbi.extensibility.utils.interactivity
+    import ISelectionHandler = powerbi.extensibility.utils.interactivity.ISelectionHandler;
+    import IInteractiveBehavior = powerbi.extensibility.utils.interactivity.IInteractiveBehavior;
+    import IInteractivityService = powerbi.extensibility.utils.interactivity.IInteractivityService;
+
     export interface DotplotBehaviorOptions {
-        columns: D3.Selection;
-        clearCatcher: D3.Selection;
+        columns: Selection<DotPlotDataGroup>;
+        clearCatcher: Selection<any>;
         interactivityService: IInteractivityService;
     }
 
     export class DotplotBehavior implements IInteractiveBehavior {
-        private columns: D3.Selection;
-        private clearCatcher: D3.Selection;
+        private columns: Selection<DotPlotDataGroup>;
+        private clearCatcher: Selection<any>;
         private interactivityService: IInteractivityService;
 
-        public bindEvents(options: DotplotBehaviorOptions, selectionHandler: ISelectionHandler): void {
+        public bindEvents(
+            options: DotplotBehaviorOptions,
+            selectionHandler: ISelectionHandler): void {
+
             this.columns = options.columns;
             this.clearCatcher = options.clearCatcher;
             this.interactivityService = options.interactivityService;
 
-            this.columns.on("click", (d: SelectableDataPoint, i: number) => {
-                selectionHandler.handleSelection(d, d3.event.ctrlKey);
+            this.columns.on("click", (dataPoint: DotPlotDataGroup) => {
+                selectionHandler.handleSelection(
+                    dataPoint,
+                    (d3.event as MouseEvent).ctrlKey);
             });
 
             options.clearCatcher.on("click", () => {
@@ -51,14 +64,14 @@ module powerbi.extensibility.visual.behavior {
         }
 
         public renderSelection(hasSelection: boolean) {
-            var hasHighlights = this.interactivityService.hasSelection();
+            const hasHighlights: boolean = this.interactivityService.hasSelection();
 
-            this.columns.style("fill-opacity", (d: DotPlotDataGroup) => {
-                return dotPlotUtils.getFillOpacity(
-                    d.selected,
-                    d.highlight,
-                    !d.highlight && hasSelection,
-                    !d.selected && hasHighlights);
+            this.columns.style("fill-opacity", (dataPoint: DotPlotDataGroup) => {
+                return getFillOpacity(
+                    dataPoint.selected,
+                    dataPoint.highlight,
+                    !dataPoint.highlight && hasSelection,
+                    !dataPoint.selected && hasHighlights);
             });
         }
     }

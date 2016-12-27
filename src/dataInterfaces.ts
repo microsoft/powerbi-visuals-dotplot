@@ -25,6 +25,18 @@
  */
 
 module powerbi.extensibility.visual {
+    // powerbi.visuals
+    import ISelectionId = powerbi.visuals.ISelectionId;
+
+    // powerbi.extensibility.utils.svg
+    import ClassAndSelector = powerbi.extensibility.utils.svg.CssConstants.ClassAndSelector;
+
+    // powerbi.extensibility.utils.interactivity
+    import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint;
+
+    // powerbi.extensibility.utils.chart
+    import IDataLabelInfo = powerbi.extensibility.utils.chart.dataLabel.IDataLabelInfo;
+
     export enum DotPlotLabelsOrientation {
         Horizontal = <any>"Horizontal",
         Vertical = <any>"Vertical",
@@ -42,20 +54,12 @@ module powerbi.extensibility.visual {
 
     export interface DotPlotChartCategory {
         value: string;
-        selectionId: SelectionId;
-    }
-
-    export interface DotPlotConstructorOptions {
-        animator?: IGenericAnimator;
-        svg?: D3.Selection;
-        margin?: IMargin;
-        radius?: number;
-        strokeWidth?: number;
+        selectionId: ISelectionId;
     }
 
     export interface DotPlotDataPoint {
         y: number;
-        tooltipInfo: TooltipDataItem[];
+        tooltipInfo: VisualTooltipDataItem[];
     }
 
     export interface DotPlotDataGroup extends
@@ -66,7 +70,7 @@ module powerbi.extensibility.visual {
         value: number;
         category: DotPlotChartCategory;
         color: string;
-        tooltipInfo: TooltipDataItem[];
+        tooltipInfo: VisualTooltipDataItem[];
         dataPoints: DotPlotDataPoint[];
         highlight: boolean;
         index: number;

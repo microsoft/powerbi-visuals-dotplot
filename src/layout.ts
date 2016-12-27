@@ -24,7 +24,10 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual.layout {
+module powerbi.extensibility.visual {
+    // powerbi.extensibility.utils.svg
+    import IMargin = powerbi.extensibility.utils.svg.IMargin;
+
     export class VisualLayout {
         private marginValue: IMargin;
         private viewportValue: IViewport;
@@ -49,7 +52,7 @@ module powerbi.extensibility.visual.layout {
             return _.clone(this.viewport);
         }
 
-        //Returns viewport minus margin
+        // Returns viewport minus margin
         public get viewportIn(): IViewport {
             return this.viewportInValue || this.viewport;
         }
