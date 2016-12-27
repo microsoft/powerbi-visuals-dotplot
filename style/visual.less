@@ -24,3 +24,20 @@
  *  THE SOFTWARE.
  */
 
+.dotplot {
+    @dotplotFontSize: 11px;
+    @defaultShapeRendering: auto;
+    @dotplotChartAxesColor: #777777;
+
+    .axis {
+        path, line {
+            fill: none;
+            stroke: @dotplotChartAxesColor;
+            shape-rendering: @defaultShapeRendering;
+        }
+
+        text {
+            font-size: @dotplotFontSize;
+        }
+    }
+}
