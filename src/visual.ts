@@ -32,6 +32,9 @@ module powerbi.extensibility.visual {
     import OrdinalScale = d3.scale.Ordinal;
     import UpdateSelection = d3.selection.Update;
 
+    // powerbi.visuals
+    import ISelectionId = powerbi.visuals.ISelectionId;
+
     // powerbi.extensibility.utils.formatting
     import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
     import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
@@ -117,6 +120,8 @@ module powerbi.extensibility.visual {
         private radius: number = 5;
         private strokeWidth: number = 1;
 
+        private visualHost: IVisualHost;
+
         private tooltipServiceWrapper: ITooltipServiceWrapper;
 
         private dotPlotSelectors: DotPlotSelectors =
@@ -145,7 +150,8 @@ module powerbi.extensibility.visual {
             dataView: DataView,
             height: number,
             colors: IColorPalette,
-            radius: number): DotPlotData {
+            radius: number,
+            visualHost: IVisualHost): DotPlotData {
 
             if (!dataView
                 || !dataView.categorical
@@ -176,10 +182,18 @@ module powerbi.extensibility.visual {
                 format: valueFormatter.getFormatStringByColumn(categoryColumn.source)
             });
 
-            var categories: DotPlotChartCategory[] = categoryColumn.values.map((x, i) => <DotPlotChartCategory>{
-                value: categoriesFormatter.format(x),
-                selectionId: /*SelectionId.createWithId(categoryColumn.identity[i])*/null // TODO: 
-            });
+            var categories: DotPlotChartCategory[] = categoryColumn.values
+                .map((value: PrimitiveValue, index: number) => {
+                    const selectionId: ISelectionId = visualHost
+                        .createSelectionIdBuilder()
+                        .withCategory(categoryColumn, index)
+                        .createSelectionId();
+
+                    return {
+                        selectionId,
+                        value: categoriesFormatter.format(value)
+                    }
+                });
 
             var labelFontSize: number = PixelConverter.fromPointToPixel(settings.labels.fontSize);
             var categoryLabelHeight = 15;
@@ -221,8 +235,13 @@ module powerbi.extensibility.visual {
                     });
                 }
 
-                var categorySelectionId = /*SelectionIdBuilder.builder().withCategory(categoryColumn, vi).createSelectionId()*/null /* TODO: implement it */,
-                    tooltipInfo = DotPlot.getTooltipData(value.toFixed(settings.labels.labelPrecision));
+                const categorySelectionId = visualHost
+                    .createSelectionIdBuilder()
+                    .withCategory(categoryColumn, vi)
+                    .createSelectionId();
+
+
+                const tooltipInfo = DotPlot.getTooltipData(value.toFixed(settings.labels.labelPrecision));
 
                 dataPointsGroup.push({
                     category: categories[vi],
@@ -281,14 +300,16 @@ module powerbi.extensibility.visual {
         public init(options: VisualConstructorOptions): void {
             this.behavior = new DotplotBehavior();
 
+            this.visualHost = options.host;
+
             this.tooltipServiceWrapper = createTooltipServiceWrapper(
-                options.host.tooltipService,
+                this.visualHost.tooltipService,
                 options.element);
 
-            this.interactivityService = createInteractivityService(options.host);
+            this.interactivityService = createInteractivityService(this.visualHost);
             // this.radius = DefaultRadius;
             // this.strokeWidth = DefaultStrokeWidth;
-            this.colorPalette = options.host.colorPalette;
+            this.colorPalette = this.visualHost.colorPalette;
 
             this.layout = new VisualLayout(/*options.viewport*/null, { top: 5, bottom: 15, right: 0, left: 0 });
 
@@ -320,7 +341,12 @@ module powerbi.extensibility.visual {
 
             this.layout.viewport = options.viewport;
 
-            var data = DotPlot.converter(options.dataViews[0], this.layout.viewportIn.height, this.colorPalette, this.radius);
+            var data = DotPlot.converter(
+                options && options.dataViews && options.dataViews[0],
+                this.layout.viewportIn.height,
+                this.colorPalette,
+                this.radius,
+                this.visualHost);
 
             if (!data) {
                 this.clear();
