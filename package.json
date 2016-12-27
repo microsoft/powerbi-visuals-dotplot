@@ -1,0 +1,36 @@
+{
+  "name": "powerbi-visuals-dotplot",
+  "version": "0.9.0",
+  "description": "A dot plot is used to show a representation of the distribution of frequencies. It is most often used to show counts of an occurrence.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Microsoft/powerbi-visuals-dotplot.git"
+  },
+  "keywords": [
+    "powerbi-visuals"
+  ],
+  "scripts": {
+    "postinstall": "typings install && pbiviz update 1.3.0",
+    "typings": "typings",
+    "pbiviz": "pbiviz",
+    "start": "pbiviz start",
+    "package": "pbiviz package",
+    "lint": "tslint \"+(src|test)/**/*.ts\"",
+    "pretest": "pbiviz package --resources --no-minify --no-pbiviz",
+    "test": "karma start"
+  },
+  "author": {
+    "name": "Microsoft",
+    "email": "pbicvsupport@microsoft.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Microsoft/powerbi-visuals-dotplot/issues"
+  },
+  "homepage": "https://github.com/Microsoft/powerbi-visuals-dotplot#readme",
+  "devDependencies": {
+    "powerbi-visuals-tools": "1.3.0",
+    "tslint": "4.0.2",
+    "typings": "2.1.0"
+  }
+}
