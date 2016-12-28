@@ -142,6 +142,8 @@ module powerbi.extensibility.visual {
 
         private static TextAnchor: string = "middle";
 
+        private static MinLabelLength: number = 0;
+
         private static Margin: IMargin = {
             top: 5,
             bottom: 15,
@@ -218,8 +220,10 @@ module powerbi.extensibility.visual {
             const settings: DotPlotSettings = this.parseSettings(dataView),
                 categoryColumn: DataViewCategoryColumn = dataView.categorical.categories[0],
                 valueColumn: DataViewValueColumn = dataView.categorical.values[0],
-                valueValues: number[] = valueColumn.values.map((value: number) => {
-                    return value || DotPlot.DefaultValue;
+                valueValues: number[] = valueColumn.values.map((value: PrimitiveValue) => {
+                    const convertedValue: number = Number(value);
+
+                    return convertedValue || DotPlot.DefaultValue;
                 }) as number[];
 
             const minValue: number = _.min<number>(valueValues),
@@ -271,7 +275,7 @@ module powerbi.extensibility.visual {
 
             const maxLabelLength: number = _.max(formattedValues.map((value: string) => {
                 return value.length;
-            }));
+            })) || DotPlot.MinLabelLength;
 
             const maxLabelWidth: number = Math.max(
                 DotPlot.MaxLabelWidth,
@@ -374,7 +378,7 @@ module powerbi.extensibility.visual {
             this.init(options);
         }
 
-        public init(options: VisualConstructorOptions): void {
+        private init(options: VisualConstructorOptions): void {
             this.behavior = new DotplotBehavior();
 
             this.visualHost = options.host;
@@ -419,8 +423,12 @@ module powerbi.extensibility.visual {
 
             this.layout.viewport = options.viewport;
 
+            const dataView: DataView = options.dataViews && options.dataViews[0]
+                ? options.dataViews[0]
+                : null;
+
             const data: DotPlotData = DotPlot.converter(
-                options.dataViews && options.dataViews[0],
+                dataView,
                 this.layout.viewportIn.height,
                 this.colorPalette,
                 this.radius,
