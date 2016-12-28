@@ -27,6 +27,7 @@
 module powerbi.extensibility.visual {
     // d3
     import Axis = d3.svg.Axis;
+    import LogScale = d3.scale.Log;
     import Selection = d3.Selection;
     import LinearScale = d3.scale.Linear;
     import OrdinalScale = d3.scale.Ordinal;
@@ -59,9 +60,11 @@ module powerbi.extensibility.visual {
     import LabelTextProperties = powerbi.extensibility.utils.chart.dataLabel.utils.LabelTextProperties;
 
     // powerbi.extensibility.utils.svg
+    import IMargin = powerbi.extensibility.utils.svg.IMargin;
     import ISize = powerbi.extensibility.utils.svg.shapes.ISize;
     import translate = powerbi.extensibility.utils.svg.translate;
     import translateAndRotate = powerbi.extensibility.utils.svg.translateAndRotate;
+    import ClassAndSelector = powerbi.extensibility.utils.svg.CssConstants.ClassAndSelector;
     import createClassAndSelector = powerbi.extensibility.utils.svg.CssConstants.createClassAndSelector;
 
     // powerbi.extensibility.utils.tooltip
@@ -70,6 +73,19 @@ module powerbi.extensibility.visual {
     import createTooltipServiceWrapper = powerbi.extensibility.utils.tooltip.createTooltipServiceWrapper;
 
     export class DotPlot implements IVisual {
+        private static MinOpacity: number = 0;
+        private static MaxOpacity: number = 1;
+
+        private static ScrollableContainerSelector: ClassAndSelector = createClassAndSelector("dotPlotScrollableContainer");
+        private static SvgPlotSelector: ClassAndSelector = createClassAndSelector("dotplot");
+        private static PlotSelector: ClassAndSelector = createClassAndSelector("dotplotSelector");
+        private static PlotGroupSelector: ClassAndSelector = createClassAndSelector("dotplotGroup");
+        private static AxisSelector: ClassAndSelector = createClassAndSelector("axisGraphicsContext");
+        private static XAxisSelector: ClassAndSelector = createClassAndSelector("x axis");
+        private static CircleSelector: ClassAndSelector = createClassAndSelector("circleSelector");
+        private static TickTextSelector: ClassAndSelector = createClassAndSelector("tick text");
+        private static XAxisLabelSelector: ClassAndSelector = createClassAndSelector("xAxisLabel");
+
         private static DataLabelXOffset: number = 2;
         private static DataLabelYOffset: number = 1.5;
 
@@ -79,18 +95,67 @@ module powerbi.extensibility.visual {
         private static DefaultRadius: number = 5;
         private static DefaultStrokeWidth: number = 1;
 
-        private static getCategoryTextProperties(text?: string): TextProperties {
-            return {
-                text: text,
-                fontFamily: "'Segoe UI',wf_segoe-ui_normal,helvetica,arial,sans-serif",
-                fontSize: PixelConverter.toString(11),
-            };
-        }
+        private static DefaultFontSize: number = 11;
+        private static DefaultFontFamily: string = "helvetica,arial,sans-serif";
 
-        private static getValueTextProperties(fontSize: number, text?: string): TextProperties {
+        private static DefaultValue: number = 0;
+
+        private static MinCategoryAxisHeight: number = 0;
+        private static DefaultCategoryAxisHeight: number = 20;
+
+        private static MinCategoryLabelHeight: number = 0;
+        private static DefaultCategoryLabelHeight: number = 15;
+
+        private static DefaultCategoryText: string = "W";
+
+        private static MaxLabelWidth: number = 50;
+
+        private static DefaultLabelText: string = "0";
+        private static LabelWidthFactor: number = 0.8;
+
+        private static RadiusFactor: number = 2;
+        private static ExtraDiameter: number = 1;
+        private static ExtraDiameterOfDataGroups: number = 2;
+
+        private static MinDomainValue: number = 0;
+        private static DefaultDomainValue: number = 1;
+
+        private static MinAmountOfDots: number = 0;
+
+        private static DotGroupStrokeColor: string = "black";
+
+        private static MiddleLabelWidth: number = 2;
+
+        private static AxisDisplayUnits: number = 0;
+        private static OuterPadding: number = 0;
+
+        private static MinCategoryWidth: number = 75;
+
+        private static DataGroupsScaleDomainMinValue: number = -1;
+        private static MinAmountOfTicks: number = 1;
+        private static TickWidthOffset: number = 3;
+
+        private static XAxisSeparator: number = 2;
+        private static XAxisLabelOffset: number = 11;
+
+        private static DefaultTickValue: string = "";
+
+        private static TextAnchor: string = "middle";
+
+        private static Margin: IMargin = {
+            top: 5,
+            bottom: 15,
+            right: 0,
+            left: 0
+        };
+
+        private static getCategoryTextProperties(
+            text?: string,
+            fontSize: number = DotPlot.DefaultFontSize): TextProperties {
+
             return {
-                text: text,
-                fontFamily: "'Segoe UI',wf_segoe-ui_normal,helvetica,arial,sans-serif",
+                text,
+                fontFamily: DotPlot.DefaultFontFamily,
                 fontSize: PixelConverter.toString(fontSize),
             };
         }
@@ -124,17 +189,6 @@ module powerbi.extensibility.visual {
 
         private tooltipServiceWrapper: ITooltipServiceWrapper;
 
-        private dotPlotSelectors: DotPlotSelectors =
-        {
-            scrollableContainer: createClassAndSelector("dotPlotScrollableContainer"),
-            svgPlotSelector: createClassAndSelector("dotplot"),
-            plotSelector: createClassAndSelector("dotplotSelector"),
-            plotGroupSelector: createClassAndSelector("dotplotGroup"),
-            axisSelector: createClassAndSelector("axisGraphicsContext"),
-            xAxisSelector: createClassAndSelector("x axis"),
-            circleSeletor: createClassAndSelector("circleSelector"),
-        };
-
         private static DefaultValues = {
             labelOrientation: DotPlotLabelsOrientation.Horizontal
         };
@@ -161,28 +215,29 @@ module powerbi.extensibility.visual {
                 return null;
             }
 
-            var settings = this.parseSettings(dataView);
-            var categoryColumn = dataView.categorical.categories[0];
-            var valueColumn = dataView.categorical.values[0];
+            const settings: DotPlotSettings = this.parseSettings(dataView),
+                categoryColumn: DataViewCategoryColumn = dataView.categorical.categories[0],
+                valueColumn: DataViewValueColumn = dataView.categorical.values[0],
+                valueValues: number[] = valueColumn.values.map((value: number) => {
+                    return value || DotPlot.DefaultValue;
+                }) as number[];
 
-            var valueValues = valueColumn.values.map(x => x || 0);
+            const minValue: number = _.min<number>(valueValues),
+                maxValue: number = _.max<number>(valueValues);
 
-            var minValue = <number>_.min(valueValues);
-            var maxValue = <number>_.max(valueValues);
-
-            var valuesFormatter: IValueFormatter = valueFormatter.create({
+            const valuesFormatter: IValueFormatter = valueFormatter.create({
                 format: valueFormatter.getFormatStringByColumn(valueColumn.source),
                 precision: settings.labels.labelPrecision,
                 value: settings.labels.labelDisplayUnits || maxValue
             });
 
-            var formattedValues = valueValues.map(valuesFormatter.format);
+            const formattedValues: string[] = valueValues.map(valuesFormatter.format);
 
-            var categoriesFormatter: IValueFormatter = valueFormatter.create({
+            const categoriesFormatter: IValueFormatter = valueFormatter.create({
                 format: valueFormatter.getFormatStringByColumn(categoryColumn.source)
             });
 
-            var categories: DotPlotChartCategory[] = categoryColumn.values
+            const categories: DotPlotChartCategory[] = categoryColumn.values
                 .map((value: PrimitiveValue, index: number) => {
                     const selectionId: ISelectionId = visualHost
                         .createSelectionIdBuilder()
@@ -192,108 +247,130 @@ module powerbi.extensibility.visual {
                     return {
                         selectionId,
                         value: categoriesFormatter.format(value)
-                    }
+                    };
                 });
 
-            var labelFontSize: number = PixelConverter.fromPointToPixel(settings.labels.fontSize);
-            var categoryLabelHeight = 15;
-            var maxXAxisHeight = (settings.categoryAxis.show ? 20 : 0) + (settings.categoryAxis.showAxisTitle ? categoryLabelHeight : 0);
+            const labelFontSize: number = PixelConverter.fromPointToPixel(settings.labels.fontSize);
 
-            var maxCategoryLength = _.max(categories.map(x => x.value.length));
-            var maxCategoryWidth = maxCategoryLength * textMeasurementService.measureSvgTextWidth(DotPlot.getCategoryTextProperties("W"));
+            const maxXAxisHeight: number =
+                (settings.categoryAxis.show
+                    ? DotPlot.DefaultCategoryAxisHeight
+                    : DotPlot.MinCategoryAxisHeight)
+                +
+                (settings.categoryAxis.showAxisTitle
+                    ? DotPlot.DefaultCategoryLabelHeight
+                    : DotPlot.MinCategoryLabelHeight);
 
-            var maxLabelLength = _.max(formattedValues.map(x => x.length));
-            var maxLabelWidth = Math.max(50, maxLabelLength * textMeasurementService.measureSvgTextWidth(DotPlot.getValueTextProperties(labelFontSize, "0")) * 0.8);
+            const maxCategoryLength: number = _.max(categories.map((category: DotPlotChartCategory) => {
+                return category.value.length;
+            }));
 
-            var diameter: number = 2 * radius + 1;
-            var dotsTotalHeight: number = height - maxXAxisHeight - radius * 2 - labelFontSize;
-            var maxDots: number = Math.floor(dotsTotalHeight / diameter);
+            const maxCategoryWidth: number = maxCategoryLength
+                * textMeasurementService.measureSvgTextWidth(
+                    DotPlot.getCategoryTextProperties(DotPlot.DefaultCategoryText));
 
-            var yScale: LinearScale<number, number> = d3.scale.linear()
-                .domain([0, maxDots])
-                .range([dotsTotalHeight, 0]);
+            const maxLabelLength: number = _.max(formattedValues.map((value: string) => {
+                return value.length;
+            }));
 
-            var dataPointsGroup: DotPlotDataGroup[] = [];
+            const maxLabelWidth: number = Math.max(
+                DotPlot.MaxLabelWidth,
+                maxLabelLength
+                * textMeasurementService.measureSvgTextWidth(
+                    DotPlot.getCategoryTextProperties(
+                        DotPlot.DefaultLabelText,
+                        labelFontSize))
+                * DotPlot.LabelWidthFactor);
 
-            var color = settings.dataPoint.fill;
-            var minDots = minValue / (maxValue / maxDots);
-            var dotScale = d3.scale.log()
-                .domain([minValue < 0 ? 1 : minValue, maxValue])
-                .range([minDots <= 0 ? 1 : minDots, maxDots])
+            const diameter: number = DotPlot.RadiusFactor * radius + DotPlot.ExtraDiameter,
+                dotsTotalHeight: number = height - maxXAxisHeight
+                    - radius * DotPlot.RadiusFactor - labelFontSize,
+                maxDots: number = Math.floor(dotsTotalHeight / diameter);
+
+            const yScale: LinearScale<number, number> = d3.scale.linear()
+                .domain([DotPlot.MinAmountOfDots, maxDots])
+                .range([dotsTotalHeight, DotPlot.MinAmountOfDots]);
+
+            const dataPointsGroup: DotPlotDataGroup[] = [],
+                minDots = minValue / (maxValue / maxDots);
+
+            const dotScale: LogScale<number, number> = d3.scale.log()
+                .domain(DotPlot.getDomain(minValue, maxValue))
+                .range(DotPlot.getDomain(minDots, maxDots))
                 .clamp(true);
 
-            for (var vi = 0, length = valueValues.length; vi < length; vi++) {
-                var value = <number>valueValues[vi];
+            for (let index: number = 0, length: number = valueValues.length; index < length; index++) {
+                const value: number = valueValues[index],
+                    scaledValue: number = dotScale(value),
+                    dataPoints: DotPlotDataPoint[] = [];
 
-                var scaledValue = dotScale(value);
-                var dataPoints: DotPlotDataPoint[] = [];
-
-                for (var level = 0; level < scaledValue && maxDots > 0; level++) {
+                for (let level: number = 0; level < scaledValue && maxDots > DotPlot.MinAmountOfDots; level++) {
                     dataPoints.push({
                         y: yScale(level),
-                        tooltipInfo: DotPlot.getTooltipData(value.toFixed(settings.labels.labelPrecision).toString())
+                        tooltipInfo: DotPlot.getTooltipData(value
+                            .toFixed(settings.labels.labelPrecision)
+                            .toString())
                     });
                 }
 
-                const categorySelectionId = visualHost
+                const categorySelectionId: ISelectionId = visualHost
                     .createSelectionIdBuilder()
-                    .withCategory(categoryColumn, vi)
+                    .withCategory(categoryColumn, index)
                     .createSelectionId();
 
-
-                const tooltipInfo = DotPlot.getTooltipData(value.toFixed(settings.labels.labelPrecision));
+                const tooltipInfo: VisualTooltipDataItem[] = DotPlot.getTooltipData(
+                    value.toFixed(settings.labels.labelPrecision));
 
                 dataPointsGroup.push({
-                    category: categories[vi],
-                    selected: false,
-                    value: value,
-                    label: formattedValues[vi],
-                    color: color,
+                    value,
+                    dataPoints,
+                    tooltipInfo,
+                    color: settings.dataPoint.fill,
+                    category: categories[index],
+                    label: formattedValues[index],
                     identity: categorySelectionId,
-                    tooltipInfo: tooltipInfo,
-                    dataPoints: dataPoints,
+                    selected: false,
                     highlight: false,
                     index: dataPointsGroup.length,
-                    labelFontSize: labelFontSize + "px"
+                    labelFontSize: PixelConverter.toString(labelFontSize)
                 });
             }
 
             return {
+                categoryColumn,
+                settings,
+                maxXAxisHeight,
+                labelFontSize,
+                dotsTotalHeight,
+                maxLabelWidth,
+                maxCategoryWidth,
                 dataGroups: dataPointsGroup,
                 categoryAxisName: categoryColumn.source.displayName,
-                categoryColumn: categoryColumn,
-                settings: settings,
-                maxXAxisHeight: maxXAxisHeight,
-                labelFontSize: labelFontSize,
-                categoryLabelHeight: categoryLabelHeight,
-                dotsTotalHeight: dotsTotalHeight,
-                maxLabelWidth: maxLabelWidth,
-                maxCategoryWidth: maxCategoryWidth
+                categoryLabelHeight: DotPlot.DefaultCategoryLabelHeight
             };
         }
 
+        private static getDomain(min: number, max: number): number[] {
+            const left: number = min < DotPlot.MinDomainValue
+                ? DotPlot.DefaultDomainValue
+                : min;
+
+            return [left, max];
+        }
+
         private static parseSettings(dataView: DataView): DotPlotSettings {
-            var settings: DotPlotSettings = DotPlotSettings.parse<DotPlotSettings>(dataView);
+            const settings: DotPlotSettings = DotPlotSettings.parse<DotPlotSettings>(dataView);
 
-            settings.labels.labelPrecision = Math.min(Math.max(0, settings.labels.labelPrecision), 17);
+            settings.labels.labelPrecision = Math.min(
+                Math.max(
+                    LabelsSettings.MinLabelPrecision,
+                    settings.labels.labelPrecision),
+                LabelsSettings.MaxLabelPrecision);
 
-            // settings.createOriginalSettings();
             return settings;
         }
 
         public constructor(options: VisualConstructorOptions) {
-            // if (options) {
-            //     if (options.svg) {
-            //         this.svg = options.svg;
-            //     }
-            //     if (options.animator) {
-            //         this.animator = options.animator;
-            //     }
-
-            //     this.radius = options.radius || DefaultRadius;
-            //     this.strokeWidth = options.strokeWidth || DefaultStrokeWidth;
-            // }
-
             this.init(options);
         }
 
@@ -307,42 +384,43 @@ module powerbi.extensibility.visual {
                 options.element);
 
             this.interactivityService = createInteractivityService(this.visualHost);
-            // this.radius = DefaultRadius;
-            // this.strokeWidth = DefaultStrokeWidth;
+
             this.colorPalette = this.visualHost.colorPalette;
 
-            this.layout = new VisualLayout(/*options.viewport*/null, { top: 5, bottom: 15, right: 0, left: 0 });
+            this.layout = new VisualLayout(null, DotPlot.Margin);
 
             this.divContainer = d3.select(options.element)
                 .append("div")
-                .classed(this.dotPlotSelectors.scrollableContainer.class, true);
+                .classed(DotPlot.ScrollableContainerSelector.class, true);
 
             this.svg = this.divContainer
                 .append("svg")
-                .classed(this.dotPlotSelectors.svgPlotSelector.class, true);
+                .classed(DotPlot.SvgPlotSelector.class, true);
 
             this.clearCatcher = appendClearCatcher(this.svg);
 
-            var axisGraphicsContext = this.svg
+            const axisGraphicsContext: Selection<any> = this.svg
                 .append("g")
-                .classed(this.dotPlotSelectors.axisSelector.class, true);
+                .classed(DotPlot.AxisSelector.class, true);
 
             this.dotPlot = this.svg
                 .append("g")
-                .classed(this.dotPlotSelectors.plotSelector.class, true);
+                .classed(DotPlot.PlotSelector.class, true);
 
             this.xAxisSelection = axisGraphicsContext
                 .append("g")
-                .classed(this.dotPlotSelectors.xAxisSelector.class, true);
+                .classed(DotPlot.XAxisSelector.class, true);
         }
 
         public update(options: VisualUpdateOptions): void {
-            if (!options.dataViews || !options.dataViews[0]) return;
+            if (!options) {
+                return;
+            }
 
             this.layout.viewport = options.viewport;
 
-            var data = DotPlot.converter(
-                options && options.dataViews && options.dataViews[0],
+            const data: DotPlotData = DotPlot.converter(
+                options.dataViews && options.dataViews[0],
                 this.layout.viewportIn.height,
                 this.colorPalette,
                 this.radius,
@@ -355,11 +433,13 @@ module powerbi.extensibility.visual {
 
             this.data = data;
 
-            // this.durationAnimations = getAnimationDuration(this.animator, options.suppressAnimations);
-
             this.dataViewport = {
                 height: this.layout.viewportIn.height,
-                width: Math.max(this.layout.viewportIn.width, this.data.dataGroups.length * (this.radius * 2 + 2) + this.data.maxLabelWidth)
+                width: Math.max(
+                    this.layout.viewportIn.width,
+                    this.data.dataGroups.length
+                    * (this.radius * DotPlot.RadiusFactor + DotPlot.ExtraDiameterOfDataGroups)
+                    + this.data.maxLabelWidth)
             };
 
             this.svg.style({
@@ -368,8 +448,8 @@ module powerbi.extensibility.visual {
             });
 
             this.divContainer.style({
-                width: `${this.layout.viewport.width}px`,
-                height: `${this.layout.viewport.height}px`
+                width: PixelConverter.toString(this.layout.viewport.width),
+                height: PixelConverter.toString(this.layout.viewport.height)
             });
 
             if (this.interactivityService) {
@@ -383,9 +463,9 @@ module powerbi.extensibility.visual {
             this.drawDotPlot();
 
             if (this.settings.labels.show) {
-                var layout: ILabelLayout = this.getDotPlotLabelsLayout();
+                const layout: ILabelLayout = this.getDotPlotLabelsLayout();
 
-                var labels: UpdateSelection<DotPlotDataGroup> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
+                const labels: UpdateSelection<DotPlotDataGroup> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
                     this.data.dataGroups,
                     this.svg,
                     layout,
@@ -406,8 +486,8 @@ module powerbi.extensibility.visual {
 
                             return translateAndRotate(dx, -dy, px, py, DotPlot.DataLabelAngle);
                         } else {
-                            const dx = size.width / DotPlot.DataLabelXOffset,
-                                dy = size.height / DotPlot.DataLabelYOffset;
+                            const dx: number = size.width / DotPlot.DataLabelXOffset,
+                                dy: number = size.height / DotPlot.DataLabelYOffset;
 
                             return translate(dx, dy);
                         }
@@ -429,7 +509,7 @@ module powerbi.extensibility.visual {
 
         private drawDotPlot(): void {
             const dotGroupSelection: UpdateSelection<DotPlotDataGroup> = this.dotPlot
-                .selectAll(this.dotPlotSelectors.plotGroupSelector.selector)
+                .selectAll(DotPlot.PlotGroupSelector.selector)
                 .data(this.data.dataGroups);
 
             const hasSelection: boolean = this.interactivityService
@@ -438,16 +518,16 @@ module powerbi.extensibility.visual {
             dotGroupSelection
                 .enter()
                 .append("g")
-                .classed(this.dotPlotSelectors.plotGroupSelector.class, true);
+                .classed(DotPlot.PlotGroupSelector.class, true);
 
             dotGroupSelection
                 .attr({
-                    'transform': (dataPoint: DotPlotDataGroup) => {
+                    "transform": (dataPoint: DotPlotDataGroup) => {
                         return translate(
                             this.getXDotPositionByIndex(dataPoint.index),
                             this.layout.margin.top + this.data.labelFontSize);
                     },
-                    'stroke': "black",
+                    "stroke": DotPlot.DotGroupStrokeColor,
                     "stroke-width": this.strokeWidth
                 })
                 .style("fill-opacity", (item: DotPlotDataGroup) => {
@@ -458,8 +538,8 @@ module powerbi.extensibility.visual {
                         false);
                 });
 
-            var circleSelection = dotGroupSelection
-                .selectAll(this.dotPlotSelectors.circleSeletor.selector)
+            const circleSelection: UpdateSelection<DotPlotDataPoint> = dotGroupSelection
+                .selectAll(DotPlot.CircleSelector.selector)
                 .data((dataPoint: DotPlotDataGroup) => {
                     return dataPoint.dataPoints;
                 });
@@ -467,7 +547,7 @@ module powerbi.extensibility.visual {
             circleSelection
                 .enter()
                 .append("circle")
-                .classed(this.dotPlotSelectors.circleSeletor.class, true);
+                .classed(DotPlot.CircleSelector.class, true);
 
             circleSelection.attr({
                 cy: (dataPoint: DotPlotDataPoint) => dataPoint.y,
@@ -488,7 +568,7 @@ module powerbi.extensibility.visual {
             if (this.interactivityService) {
                 this.interactivityService.applySelectionStateToData(this.data.dataGroups);
 
-                var behaviorOptions: DotplotBehaviorOptions = {
+                const behaviorOptions: DotplotBehaviorOptions = {
                     columns: dotGroupSelection,
                     clearCatcher: this.clearCatcher,
                     interactivityService: this.interactivityService,
@@ -502,9 +582,9 @@ module powerbi.extensibility.visual {
         }
 
         private getXDotPositionByIndex(index: number): number {
-            var scale: OrdinalScale<number, number> = this.xAxisProperties.scale;
+            const scale: OrdinalScale<number, number> = this.xAxisProperties.scale;
 
-            return this.data.maxLabelWidth / 2 + scale(index);
+            return this.data.maxLabelWidth / DotPlot.MiddleLabelWidth + scale(index);
         }
 
         private getDotPlotLabelsLayout(): ILabelLayout {
@@ -512,28 +592,35 @@ module powerbi.extensibility.visual {
                 labelText: (dataGroup: DotPlotDataGroup) => {
                     return dataLabelUtils.getLabelFormattedText({
                         label: dataGroup.label,
-                        fontSize: parseFloat(<any>this.settings.labels.fontSize),
+                        fontSize: parseFloat(this.settings.labels.fontSize as any),
                         maxWidth: this.dataViewport.width,
                     });
                 },
                 labelLayout: {
                     x: (dataGroup: DotPlotDataGroup) => {
-                        var x = this.getXDotPositionByIndex(dataGroup.index);
-                        var dx = dataGroup.size.width / DotPlot.DataLabelXOffset;
+                        const x: number = this.getXDotPositionByIndex(dataGroup.index),
+                            dx: number = dataGroup.size.width / DotPlot.DataLabelXOffset;
+
                         return x - dx;
                     },
                     y: (dataGroup: DotPlotDataGroup) => {
-                        var y = (_.isEmpty(dataGroup.dataPoints) ? this.data.dotsTotalHeight + this.radius * 2 : _.last(dataGroup.dataPoints).y) + this.data.labelFontSize;
-                        var dy = dataGroup.size.height;
-                        return y - dy;
+                        const y: number = (_.isEmpty(dataGroup.dataPoints)
+                            ? this.data.dotsTotalHeight + this.radius * DotPlot.RadiusFactor
+                            : _.last(dataGroup.dataPoints).y) + this.data.labelFontSize;
+
+                        return y - dataGroup.size.height;
                     }
                 },
                 filter: (dataGroup: DotPlotDataGroup) => {
-                    return !!(dataGroup && dataGroup.dataPoints && this.layout.viewportIn.height - this.data.maxXAxisHeight + this.radius * 2 > this.data.labelFontSize);
+                    return !!(dataGroup
+                        && dataGroup.dataPoints
+                        && this.layout.viewportIn.height
+                        - this.data.maxXAxisHeight
+                        + this.radius * DotPlot.RadiusFactor > this.data.labelFontSize);
                 },
                 style: {
                     "fill": this.settings.labels.color,
-                    "font-size": this.data.labelFontSize + "px",
+                    "font-size": PixelConverter.toString(this.data.labelFontSize),
                     "font-family": LabelTextProperties.fontFamily
                 },
             };
@@ -551,8 +638,8 @@ module powerbi.extensibility.visual {
             dataLabelUtils.cleanDataLabels(this.svg);
 
             this.svg.style({
-                height: PixelConverter.toString(0),
-                width: PixelConverter.toString(0)
+                height: PixelConverter.toString(VisualLayout.MinViewportSize),
+                width: PixelConverter.toString(VisualLayout.MinViewportSize)
             });
         }
 
@@ -565,37 +652,58 @@ module powerbi.extensibility.visual {
         }
 
         private calculateAxes(): void {
-            var pixelSpan = this.dataViewport.width - this.data.maxLabelWidth;
+            const pixelSpan: number = this.dataViewport.width - this.data.maxLabelWidth;
 
-            var xAxisProperties = createAxis({
+            const xAxisProperties: IAxisProperties = createAxis({
                 pixelSpan: pixelSpan,
-                dataDomain: [0, this.data.dataGroups.length - 1],
+                dataDomain: [
+                    DotPlot.MinDomainValue,
+                    this.data.dataGroups.length - 1
+                ],
                 metaDataColumn: null,
                 formatString: null,
-                outerPadding: 0,
+                outerPadding: DotPlot.OuterPadding,
                 isScalar: true,
                 isVertical: false,
-                forcedTickCount: Math.min(this.data.dataGroups.length,
-                    Math.floor((pixelSpan + this.data.maxCategoryWidth) / Math.min(75, this.data.maxCategoryWidth))),
+                forcedTickCount: Math.min(
+                    this.data.dataGroups.length,
+                    Math.floor(
+                        (pixelSpan + this.data.maxCategoryWidth)
+                        / Math.min(DotPlot.MinCategoryWidth, this.data.maxCategoryWidth))),
                 useTickIntervalForDisplayUnits: true,
                 isCategoryAxis: false,
                 scaleType: this.scaleType,
-                axisDisplayUnits: 0
+                axisDisplayUnits: DotPlot.AxisDisplayUnits
             });
 
-            var scale = xAxisProperties.axis.scale();
-            scale.domain([-1, this.data.dataGroups.length]);
-            var tickValues = xAxisProperties.axis.tickValues().filter(x => x < this.data.dataGroups.length);
+            const scale: any = xAxisProperties.axis.scale();
+
+            scale.domain([
+                DotPlot.DataGroupsScaleDomainMinValue,
+                this.data.dataGroups.length
+            ]);
+
+            const tickValues: any[] = xAxisProperties.axis
+                .tickValues()
+                .filter((value: number) => value < this.data.dataGroups.length);
+
             xAxisProperties.axis.tickValues(tickValues);
-            var tickWidth = (tickValues.length > 1 ? scale(tickValues[1]) - scale(tickValues[0]) : pixelSpan) - 3;
+
+            const tickWidth: number = (tickValues.length > DotPlot.MinAmountOfTicks
+                ? scale(tickValues[1]) - scale(tickValues[0])
+                : pixelSpan) - DotPlot.TickWidthOffset;
+
             xAxisProperties.axis.tickFormat((index: number) => {
                 if (!this.settings.categoryAxis.show || !this.data.dataGroups[index]) {
-                    return "";
+                    return DotPlot.DefaultTickValue;
                 }
 
-                var textProperties = DotPlot.getCategoryTextProperties(this.data.dataGroups[index].category.value);
+                const textProperties: TextProperties = DotPlot.getCategoryTextProperties(
+                    this.data.dataGroups[index].category.value);
 
-                return textMeasurementService.getTailoredTextOrDefault(textProperties, tickWidth);
+                return textMeasurementService.getTailoredTextOrDefault(
+                    textProperties,
+                    tickWidth);
             });
 
             if (this.settings.categoryAxis.show) {
@@ -611,7 +719,9 @@ module powerbi.extensibility.visual {
 
             this.xAxisSelection.attr(
                 "transform",
-                translate(this.data.maxLabelWidth / 2, height));
+                translate(
+                    this.data.maxLabelWidth / DotPlot.MiddleLabelWidth,
+                    height));
 
             const xAxis: Axis = this.xAxisProperties.axis.orient("bottom");
 
@@ -619,10 +729,10 @@ module powerbi.extensibility.visual {
                 .transition()
                 .duration(duration)
                 .call(xAxis)
-                .selectAll("g.tick text")
+                .selectAll(`g${DotPlot.TickTextSelector.selector}`)
                 .style("fill", this.settings.categoryAxis.labelColor);
 
-            this.xAxisSelection.selectAll(".tick text")
+            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selector)
                 .append("title")
                 .text((index: number) => {
                     return this.data.dataGroups[index]
@@ -631,10 +741,12 @@ module powerbi.extensibility.visual {
 
             this.xAxisSelection
                 .selectAll("line")
-                .style("opacity", this.settings.categoryAxis.show ? 1 : 0);
+                .style("opacity", this.settings.categoryAxis.show
+                    ? DotPlot.MaxOpacity
+                    : DotPlot.MinOpacity);
 
             this.xAxisSelection
-                .selectAll(".xAxisLabel")
+                .selectAll(DotPlot.XAxisLabelSelector.selector)
                 .remove();
 
             if (this.settings.categoryAxis.showAxisTitle) {
@@ -644,12 +756,17 @@ module powerbi.extensibility.visual {
                 this.xAxisSelection
                     .append("text")
                     .text(this.data.categoryAxisName)
-                    .style("text-anchor", "middle")
-                    .attr("class", "xAxisLabel")
-                    .style("fill", this.settings.categoryAxis.labelColor)
-                    .attr("transform", translate(
-                        this.dataViewport.width / 2 - titleWidth / 2,
-                        this.data.maxXAxisHeight - this.data.categoryLabelHeight + 11));
+
+                    .style({
+                        "text-anchor": DotPlot.TextAnchor,
+                        "fill": this.settings.categoryAxis.labelColor
+                    })
+                    .attr({
+                        "class": DotPlot.XAxisLabelSelector.class,
+                        "transform": translate(
+                            this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
+                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset)
+                    });
             }
         }
     }

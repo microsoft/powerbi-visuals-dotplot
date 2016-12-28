@@ -42,6 +42,9 @@ module powerbi.extensibility.visual {
     }
 
     export class LabelsSettings {
+        public static MinLabelPrecision: number = 0;
+        public static MaxLabelPrecision: number = 17;
+
         public show: boolean = true;
         public color: string = dataLabelUtils.defaultLabelColor;
         public labelDisplayUnits: number = 0;

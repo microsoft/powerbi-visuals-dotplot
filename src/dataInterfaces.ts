@@ -28,9 +28,6 @@ module powerbi.extensibility.visual {
     // powerbi.visuals
     import ISelectionId = powerbi.visuals.ISelectionId;
 
-    // powerbi.extensibility.utils.svg
-    import ClassAndSelector = powerbi.extensibility.utils.svg.CssConstants.ClassAndSelector;
-
     // powerbi.extensibility.utils.interactivity
     import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint;
 
@@ -41,16 +38,6 @@ module powerbi.extensibility.visual {
         Horizontal = <any>"Horizontal",
         Vertical = <any>"Vertical",
     };
-
-    export interface DotPlotSelectors {
-        scrollableContainer: ClassAndSelector;
-        svgPlotSelector: ClassAndSelector;
-        plotSelector: ClassAndSelector;
-        plotGroupSelector: ClassAndSelector;
-        axisSelector: ClassAndSelector;
-        xAxisSelector: ClassAndSelector;
-        circleSeletor: ClassAndSelector;
-    }
 
     export interface DotPlotChartCategory {
         value: string;

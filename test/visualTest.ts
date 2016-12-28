@@ -52,14 +52,26 @@ namespace powerbi.extensibility.visual.test {
         });
 
         describe("DOM tests", () => {
-            it("svg element created", () => expect(visualBuilder.mainElement[0]).toBeInDOM());
+            it("svg element created", () => {
+                expect(visualBuilder.mainElement[0]).toBeInDOM();
+            });
 
             it("update", done => {
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    expect(visualBuilder.mainElement.children(".dotplotSelector").children(".dotplotGroup").length)
-                        .toBeGreaterThan(0);
-                    expect(visualBuilder.mainElement.children('.axisGraphicsContext').children(".x.axis").children(".tick").length)
-                        .toBe(dataView.categorical.categories[0].values.length);
+                    const dotplotGroupLength: number = visualBuilder.mainElement
+                        .children(".dotplotSelector")
+                        .children(".dotplotGroup")
+                        .length;
+
+                    const tickLength: number = visualBuilder.mainElement
+                        .children(".axisGraphicsContext")
+                        .children(".x.axis")
+                        .children(".tick")
+                        .length;
+
+                    expect(dotplotGroupLength).toBeGreaterThan(0);
+                    expect(tickLength).toBe(dataView.categorical.categories[0].values.length);
+
                     done();
                 });
             });
@@ -67,20 +79,30 @@ namespace powerbi.extensibility.visual.test {
             it("xAxis tick labels have tooltip", done => {
                 defaultDataViewBuilder.valuesCategory = DotPlotData.ValuesCategoryLongNames;
                 dataView = defaultDataViewBuilder.getDataView();
+
                 visualBuilder.updateRenderTimeout(dataView, () => {
                     visualBuilder.xAxisTicks.each((i, e) =>
                         expect($(e).children("text").get(0).firstChild.textContent)
                             .toEqual(dataView.categorical.categories[0].values[i] || "(Blank)"));
+
                     done();
                 });
             });
 
             it("should correctly render duplicates in categories", done => {
-                dataView.categorical.categories[0].values[1] = dataView.categorical.categories[0].values[0];
-                dataView.categorical.categories[0].identity[1] = dataView.categorical.categories[0].identity[0];
+                dataView.categorical.categories[0].values[1] =
+                    dataView.categorical.categories[0].values[0];
+
+                dataView.categorical.categories[0].identity[1] =
+                    dataView.categorical.categories[0].identity[0];
+
                 visualBuilder.updateRenderTimeout(dataView, () => {
-                    let groupsRects = visualBuilder.dotGroups.toArray().map((e: Element) => e.getBoundingClientRect());
+                    const groupsRects: ClientRect[] = visualBuilder.dotGroups
+                        .toArray()
+                        .map((element: Element) => element.getBoundingClientRect());
+
                     expect(_.uniq(groupsRects.map(x => x.left)).length).toEqual(groupsRects.length);
+
                     done();
                 });
             });
@@ -94,9 +116,9 @@ namespace powerbi.extensibility.visual.test {
             it("multi-selection test", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                let firstGroup = visualBuilder.dotGroups.eq(0);
-                let secondGroup = visualBuilder.dotGroups.eq(1);
-                let thirdGroup = visualBuilder.dotGroups.eq(2);
+                const firstGroup: JQuery = visualBuilder.dotGroups.eq(0),
+                    secondGroup: JQuery = visualBuilder.dotGroups.eq(1),
+                    thirdGroup: JQuery = visualBuilder.dotGroups.eq(2);
 
                 clickElement(firstGroup);
                 clickElement(secondGroup, true);
@@ -121,8 +143,14 @@ namespace powerbi.extensibility.visual.test {
                     (dataView.metadata.objects as any).categoryAxis.show = true;
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
-                    visualBuilder.xAxisTicks.toArray().map($).forEach(e =>
-                        expect(e.children("line").css('opacity')).not.toBe("0"));
+
+                    visualBuilder.xAxisTicks
+                        .toArray()
+                        .map($)
+                        .forEach((e: JQuery) => {
+                            expect(e.children("line").css("opacity")).not.toBe("0");
+                        });
+
                     visualBuilder.xAxisTicks.toArray()
                         .map(e => $($(e).children("text")[0].childNodes[0]))
                         .forEach(e => {
@@ -133,9 +161,16 @@ namespace powerbi.extensibility.visual.test {
                     (dataView.metadata.objects as any).categoryAxis.show = false;
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
-                    visualBuilder.xAxisTicks.toArray().map($).forEach(e =>
-                        expect(e.children("line").css('opacity')).toBe("0"));
-                    visualBuilder.xAxisTicks.toArray()
+
+                    visualBuilder.xAxisTicks
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            expect(element.children("line").css("opacity")).toBe("0");
+                        });
+
+                    visualBuilder.xAxisTicks
+                        .toArray()
                         .map(e => $($(e).children("text")[0].childNodes[0]))
                         .forEach(e => {
                             expect(e.is("title")).toBeTruthy();
@@ -145,30 +180,37 @@ namespace powerbi.extensibility.visual.test {
                 it("title", () => {
                     (dataView.metadata.objects as any).categoryAxis.showAxisTitle = true;
                     visualBuilder.updateFlushAllD3Transitions(dataView);
+
                     expect(visualBuilder.xAxisLabel).toBeInDOM();
 
                     (dataView.metadata.objects as any).categoryAxis.showAxisTitle = false;
                     visualBuilder.updateFlushAllD3Transitions(dataView);
+
                     expect(visualBuilder.xAxisLabel).not.toBeInDOM();
                 });
 
                 it("lebel color", () => {
-                    let color = "#112233";
+                    const color: string = "#112233";
 
                     (dataView.metadata.objects as any).categoryAxis.showAxisTitle = true;
                     (dataView.metadata.objects as any).categoryAxis.labelColor = getSolidColorStructuralObject(color);
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                    visualBuilder.xAxisTicks.toArray().map($).forEach(e =>
-                        assertColorsMatch(e.children("text").css('fill'), color));
-                    assertColorsMatch(visualBuilder.xAxisLabel.css('fill'), color);
+                    visualBuilder.xAxisTicks
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            assertColorsMatch(element.children("text").css("fill"), color);
+                        });
+
+                    assertColorsMatch(visualBuilder.xAxisLabel.css("fill"), color);
                 });
             });
 
             describe("Data colors", () => {
                 it("default color", () => {
-                    let color = "#112233";
+                    const color: string = "#112233";
 
                     dataView.metadata.objects = {
                         dataPoint: {
@@ -178,9 +220,12 @@ namespace powerbi.extensibility.visual.test {
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                    visualBuilder.dots.toArray().map($).forEach((element: JQuery) => {
-                        assertColorsMatch(element.css('fill'), color);
-                    });
+                    visualBuilder.dots
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            assertColorsMatch(element.css("fill"), color);
+                        });
                 });
             });
 
@@ -196,54 +241,75 @@ namespace powerbi.extensibility.visual.test {
                 it("show", () => {
                     (dataView.metadata.objects as any).labels.show = true;
                     visualBuilder.updateFlushAllD3Transitions(dataView);
+
                     expect(visualBuilder.dataLabels).toBeInDOM();
 
                     (dataView.metadata.objects as any).labels.show = false;
                     visualBuilder.updateFlushAllD3Transitions(dataView);
+
                     expect(visualBuilder.dataLabels).not.toBeInDOM();
                 });
 
                 it("color", () => {
-                    let color = "#112233";
+                    let color: string = "#112233";
+
                     (dataView.metadata.objects as any).labels.color = getSolidColorStructuralObject(color);
                     visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                    visualBuilder.dataLabels.toArray().map($).forEach((element: JQuery) => {
-                        assertColorsMatch(element.css('fill'), color);
-                    });
+                    visualBuilder.dataLabels
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            assertColorsMatch(element.css("fill"), color);
+                        });
                 });
 
                 it("display units", () => {
-                    let displayUnits = 1000;
+                    const displayUnits: number = 1000;
+
                     (dataView.metadata.objects as any).labels.labelDisplayUnits = displayUnits;
                     visualBuilder.updateFlushAllD3Transitions(dataView);
-                    visualBuilder.dataLabels.toArray().map($).forEach(e =>
-                        expect(_.last(e.text())).toEqual("K"));
+
+                    visualBuilder.dataLabels
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            expect(_.last(element.text())).toEqual("K");
+                        });
                 });
 
                 it("precision", () => {
-                    let precision = 7;
+                    const precision: number = 7;
+
                     (dataView.metadata.objects as any).labels.labelDisplayUnits = 1;
                     (dataView.metadata.objects as any).labels.labelPrecision = precision;
+
                     visualBuilder.updateFlushAllD3Transitions(dataView);
-                    visualBuilder.dataLabels.toArray().map($).forEach(e =>
-                        expect(e.text().split(".")[1].length).toEqual(precision));
+
+                    visualBuilder.dataLabels
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            expect(element.text().split(".")[1].length).toEqual(precision);
+                        });
                 });
 
                 it("font size", () => {
-                    let fontSize: number = 23,
+                    const fontSize: number = 23,
                         fontSizeInPt: string = "30.6667px";
 
                     (dataView.metadata.objects as any).labels.fontSize = fontSize;
 
                     visualBuilder.updateFlushAllD3Transitions(dataView);
-                    visualBuilder.dataLabels.toArray().map($).forEach((element: JQuery) => {
-                        expect(element.css('font-size')).toBe(fontSizeInPt);
-                    });
+
+                    visualBuilder.dataLabels
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            expect(element.css("font-size")).toBe(fontSizeInPt);
+                        });
                 });
             });
         });
     });
-
-
 }

@@ -31,6 +31,11 @@
 @import (less) "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.css";
 @import (less) "node_modules/powerbi-visuals-utils-chartutils/lib/index.css";
 
+.dotPlotScrollableContainer {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
 .dotplot {
     @dotplotFontSize: 11px;
     @defaultShapeRendering: auto;

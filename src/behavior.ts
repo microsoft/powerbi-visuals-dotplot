@@ -58,12 +58,12 @@ module powerbi.extensibility.visual {
                     (d3.event as MouseEvent).ctrlKey);
             });
 
-            options.clearCatcher.on("click", () => {
+            this.clearCatcher.on("click", () => {
                 selectionHandler.handleClearSelection();
             });
         }
 
-        public renderSelection(hasSelection: boolean) {
+        public renderSelection(hasSelection: boolean): void {
             const hasHighlights: boolean = this.interactivityService.hasSelection();
 
             this.columns.style("fill-opacity", (dataPoint: DotPlotDataGroup) => {
