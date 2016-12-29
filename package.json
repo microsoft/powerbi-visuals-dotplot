@@ -1,0 +1,53 @@
+{
+  "name": "powerbi-visuals-dotplot",
+  "version": "0.9.0",
+  "description": "A dot plot is used to show a representation of the distribution of frequencies. It is most often used to show counts of an occurrence.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Microsoft/powerbi-visuals-dotplot.git"
+  },
+  "keywords": [
+    "powerbi-visuals"
+  ],
+  "scripts": {
+    "postinstall": "typings install && pbiviz update 1.3.0",
+    "typings": "typings",
+    "pbiviz": "pbiviz",
+    "start": "pbiviz start",
+    "package": "pbiviz package",
+    "lint": "tslint \"+(src|test)/**/*.ts\"",
+    "pretest": "pbiviz package --resources --no-minify --no-pbiviz",
+    "test": "karma start"
+  },
+  "author": {
+    "name": "Microsoft",
+    "email": "pbicvsupport@microsoft.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Microsoft/powerbi-visuals-dotplot/issues"
+  },
+  "homepage": "https://github.com/Microsoft/powerbi-visuals-dotplot#readme",
+  "devDependencies": {
+    "@types/jasmine": "2.5.37",
+    "@types/jasmine-jquery": "1.5.28",
+    "jasmine": "2.5.2",
+    "jasmine-jquery": "2.1.1",
+    "karma": "1.3.0",
+    "karma-chrome-launcher": "2.0.0",
+    "karma-jasmine": "1.0.2",
+    "karma-typescript-preprocessor": "0.3.0",
+    "d3": "3.5.5",
+    "lodash": "4.16.2",
+    "powerbi-visuals-tools": "1.3.0",
+    "powerbi-visuals-utils-chartutils": "^0.2.3",
+    "powerbi-visuals-utils-dataviewutils": "^1.0.1",
+    "powerbi-visuals-utils-formattingutils": "^0.2.2",
+    "powerbi-visuals-utils-interactivityutils": "^0.2.1",
+    "powerbi-visuals-utils-svgutils": "^0.2.1",
+    "powerbi-visuals-utils-testutils": "^0.2.2",
+    "powerbi-visuals-utils-tooltiputils": "^0.3.0",
+    "tslint": "4.0.2",
+    "typings": "2.1.0"
+  }
+}
