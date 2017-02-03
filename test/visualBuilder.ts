@@ -32,11 +32,10 @@ module powerbi.extensibility.visual.test {
 
     // DotPlot1442374105856
     import VisualClass = powerbi.extensibility.visual.DotPlot1442374105856.DotPlot;
-    import VisualPlugin = powerbi.visuals.plugins.DotPlot1442374105856;
 
     export class DotPlotBuilder extends VisualBuilderBase<VisualClass> {
         constructor(width: number, height: number) {
-            super(width, height, VisualPlugin.name);
+            super(width, height, "DotPlot1442374105856");
         }
 
         protected build(options: VisualConstructorOptions) {
