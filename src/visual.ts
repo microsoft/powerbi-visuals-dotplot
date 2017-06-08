@@ -296,16 +296,17 @@ module powerbi.extensibility.visual {
                 .range([dotsTotalHeight, DotPlot.MinAmountOfDots]);
 
             const dataPointsGroup: DotPlotDataGroup[] = [],
-                minDots = minValue / (maxValue / maxDots);
+                minDots = minValue / (maxValue / maxDots),
+                additionalValue = minValue <= 1 ? -minValue + 1 : 0; // negative values scales incorrect
 
             const dotScale: LogScale<number, number> = d3.scale.log()
-                .domain(DotPlot.getDomain(minValue, maxValue))
-                .range(DotPlot.getDomain(minDots, maxDots))
+                .domain(DotPlot.getDomain(minValue + additionalValue, maxValue + additionalValue))
+                .range(DotPlot.getDomain(minDots > maxDots ? 1 : minDots, maxDots))
                 .clamp(true);
 
             for (let index: number = 0, length: number = valueValues.length; index < length; index++) {
                 const value: number = valueValues[index],
-                    scaledValue: number = dotScale(value),
+                    scaledValue: number = dotScale(value + additionalValue),
                     dataPoints: DotPlotDataPoint[] = [];
 
                 for (let level: number = 0; level < scaledValue && maxDots > DotPlot.MinAmountOfDots; level++) {
