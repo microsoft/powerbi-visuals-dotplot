@@ -37,7 +37,7 @@ module powerbi.extensibility.visual {
     export enum DotPlotLabelsOrientation {
         Horizontal = <any>"Horizontal",
         Vertical = <any>"Vertical",
-    };
+    }
 
     export interface DotPlotChartCategory {
         value: string;

@@ -395,25 +395,25 @@ module powerbi.extensibility.visual {
 
             this.divContainer = d3.select(options.element)
                 .append("div")
-                .classed(DotPlot.ScrollableContainerSelector.class, true);
+                .classed(DotPlot.ScrollableContainerSelector.className, true);
 
             this.svg = this.divContainer
                 .append("svg")
-                .classed(DotPlot.SvgPlotSelector.class, true);
+                .classed(DotPlot.SvgPlotSelector.className, true);
 
             this.clearCatcher = appendClearCatcher(this.svg);
 
             const axisGraphicsContext: Selection<any> = this.svg
                 .append("g")
-                .classed(DotPlot.AxisSelector.class, true);
+                .classed(DotPlot.AxisSelector.className, true);
 
             this.dotPlot = this.svg
                 .append("g")
-                .classed(DotPlot.PlotSelector.class, true);
+                .classed(DotPlot.PlotSelector.className, true);
 
             this.xAxisSelection = axisGraphicsContext
                 .append("g")
-                .classed(DotPlot.XAxisSelector.class, true);
+                .classed(DotPlot.XAxisSelector.className, true);
         }
 
         public update(options: VisualUpdateOptions): void {
@@ -517,7 +517,7 @@ module powerbi.extensibility.visual {
 
         private drawDotPlot(): void {
             const dotGroupSelection: UpdateSelection<DotPlotDataGroup> = this.dotPlot
-                .selectAll(DotPlot.PlotGroupSelector.selector)
+                .selectAll(DotPlot.PlotGroupSelector.selectorName)
                 .data(this.data.dataGroups);
 
             const hasSelection: boolean = this.interactivityService
@@ -526,7 +526,7 @@ module powerbi.extensibility.visual {
             dotGroupSelection
                 .enter()
                 .append("g")
-                .classed(DotPlot.PlotGroupSelector.class, true);
+                .classed(DotPlot.PlotGroupSelector.className, true);
 
             dotGroupSelection
                 .attr({
@@ -547,7 +547,7 @@ module powerbi.extensibility.visual {
                 });
 
             const circleSelection: UpdateSelection<DotPlotDataPoint> = dotGroupSelection
-                .selectAll(DotPlot.CircleSelector.selector)
+                .selectAll(DotPlot.CircleSelector.selectorName)
                 .data((dataPoint: DotPlotDataGroup) => {
                     return dataPoint.dataPoints;
                 });
@@ -555,7 +555,7 @@ module powerbi.extensibility.visual {
             circleSelection
                 .enter()
                 .append("circle")
-                .classed(DotPlot.CircleSelector.class, true);
+                .classed(DotPlot.CircleSelector.className, true);
 
             circleSelection.attr({
                 cy: (dataPoint: DotPlotDataPoint) => dataPoint.y,
@@ -737,10 +737,10 @@ module powerbi.extensibility.visual {
                 .transition()
                 .duration(duration)
                 .call(xAxis)
-                .selectAll(`g${DotPlot.TickTextSelector.selector}`)
+                .selectAll(`g${DotPlot.TickTextSelector.selectorName}`)
                 .style("fill", this.settings.categoryAxis.labelColor);
 
-            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selector)
+            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
                 .append("title")
                 .text((index: number) => {
                     return this.data.dataGroups[index]
@@ -754,7 +754,7 @@ module powerbi.extensibility.visual {
                     : DotPlot.MinOpacity);
 
             this.xAxisSelection
-                .selectAll(DotPlot.XAxisLabelSelector.selector)
+                .selectAll(DotPlot.XAxisLabelSelector.selectorName)
                 .remove();
 
             if (this.settings.categoryAxis.showAxisTitle) {
@@ -770,7 +770,7 @@ module powerbi.extensibility.visual {
                         "fill": this.settings.categoryAxis.labelColor
                     })
                     .attr({
-                        "class": DotPlot.XAxisLabelSelector.class,
+                        "class": DotPlot.XAxisLabelSelector.className,
                         "transform": translate(
                             this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
                             this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset)
