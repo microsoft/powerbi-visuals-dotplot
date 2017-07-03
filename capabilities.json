@@ -52,16 +52,19 @@
     ],
     "objects": {
         "categoryAxis": {
-            "displayName": "X-Axis",
+            "displayName": "X Axis",
+            "displayNameKey": "Visual_XAxis",
             "properties": {
                 "show": {
                     "displayName": "Show",
+                    "displayNameKey": "Visual_Show",
                     "type": {
                         "bool": true
                     }
                 },
                 "showAxisTitle": {
                     "displayName": "Title",
+                    "displayNameKey": "Visual_Title",
                     "description": "Title options",
                     "type": {
                         "bool": true
@@ -69,6 +72,7 @@
                 },
                 "labelColor": {
                     "displayName": "Label color",
+                    "displayNameKey": "Visual_LabelColor",
                     "type": {
                         "fill": {
                             "solid": {
@@ -81,9 +85,11 @@
         },
         "dataPoint": {
             "displayName": "Data colors",
+            "displayNameKey": "Visual_DataColors",
             "properties": {
                 "fill": {
                     "displayName": "Fill",
+                    "displayNameKey": "Visual_Fill",
                     "type": {
                         "fill": {
                             "solid": {
@@ -96,16 +102,19 @@
         },
         "labels": {
             "displayName": "Data labels",
+            "displayNameKey": "Visual_DataLabels",
             "description": "Display data label options",
             "properties": {
                 "show": {
                     "displayName": "Show",
+                    "displayNameKey": "Visual_Show",
                     "type": {
                         "bool": true
                     }
                 },
                 "color": {
                     "displayName": "Color",
+                    "displayNameKey": "Visual_Color",
                     "description": "Select color for data labels",
                     "type": {
                         "fill": {
@@ -117,6 +126,7 @@
                 },
                 "labelDisplayUnits": {
                     "displayName": "Display units",
+                    "displayNameKey": "Visual_DisplayUnits",
                     "description": "Select the units (millions, billions, etc.)",
                     "type": {
                         "formatting": {
@@ -127,6 +137,7 @@
                 },
                 "labelPrecision": {
                     "displayName": "Decimal places",
+                    "displayNameKey": "Visual_DecimalPlaces",
                     "description": "Select the number of decimal places to display",
                     "placeHolderText": "Auto",
                     "type": {
@@ -136,6 +147,7 @@
                 },
                 "fontSize": {
                     "displayName": "Text Size",
+                    "displayNameKey": "Visual_TextSize",
                     "type": {
                         "formatting": {
                             "fontSize": true
