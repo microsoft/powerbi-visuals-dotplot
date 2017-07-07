@@ -1,4 +1,6 @@
 {
+    "Visual_Category": "Category",
+    "Visual_Values": "Values",
     "Visual_XAxis": "X Axis",
     "Visual_Show": "Show",
     "Visual_Title": "Title",
