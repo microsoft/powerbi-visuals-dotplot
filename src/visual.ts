@@ -207,7 +207,9 @@ module powerbi.extensibility.visual {
             height: number,
             colors: IColorPalette,
             radius: number,
-            visualHost: IVisualHost): DotPlotData {
+            visualHost: IVisualHost,
+            layout: VisualLayout
+        ): DotPlotData {
 
             if (!dataView
                 || !dataView.categorical
@@ -276,19 +278,21 @@ module powerbi.extensibility.visual {
             const maxLabelLength: number = _.max(formattedValues.map((value: string) => {
                 return value.length;
             })) || DotPlot.MinLabelLength;
-
             const maxLabelWidth: number = Math.max(
                 DotPlot.MaxLabelWidth,
                 maxLabelLength
                 * textMeasurementService.measureSvgTextWidth(
                     DotPlot.getCategoryTextProperties(
-                        DotPlot.DefaultLabelText,
+                        "M",
                         labelFontSize))
                 * DotPlot.LabelWidthFactor);
 
+            if (settings.labels.orientation === DotPlotLabelsOrientation.Vertical) {
+                settings.maxLabelWidth = maxLabelWidth;
+            }
             const diameter: number = DotPlot.RadiusFactor * radius + DotPlot.ExtraDiameter,
                 dotsTotalHeight: number = height - maxXAxisHeight
-                    - radius * DotPlot.RadiusFactor - labelFontSize,
+                    - radius * DotPlot.RadiusFactor - labelFontSize - layout.margin.top - settings.maxLabelWidth,
                 maxDots: number = Math.floor(dotsTotalHeight / diameter);
 
             const yScale: LinearScale<number, number> = d3.scale.linear()
@@ -427,13 +431,15 @@ module powerbi.extensibility.visual {
             const dataView: DataView = options.dataViews && options.dataViews[0]
                 ? options.dataViews[0]
                 : null;
-
+            this.layout.viewportIn.height = this.layout.viewportIn.height;
             const data: DotPlotData = DotPlot.converter(
                 dataView,
                 this.layout.viewportIn.height,
                 this.colorPalette,
                 this.radius,
-                this.visualHost);
+                this.visualHost,
+                this.layout
+            );
 
             if (!data) {
                 this.clear();
@@ -485,15 +491,14 @@ module powerbi.extensibility.visual {
                 if (labels) {
                     labels.attr("transform", (dataGroup: DotPlotDataGroup) => {
                         const size: ISize = dataGroup.size;
-
-                        if (DotPlot.DefaultValues.labelOrientation === DotPlotLabelsOrientation.Vertical) {
+                        if (data.settings.labels.orientation === DotPlotLabelsOrientation.Vertical) {
                             const px: number = dataGroup.anchorPoint.x,
                                 py: number = dataGroup.anchorPoint.y,
                                 dx: number = size.width / DotPlot.DataLabelXOffset
                                     + size.height * DotPlot.DataLabelXOffsetIndex,
                                 dy: number = size.height + size.height / DotPlot.DataLabelYOffset;
 
-                            return translateAndRotate(dx, -dy, px, py, DotPlot.DataLabelAngle);
+                            return translateAndRotate(dx, -dy + this.data.settings.maxLabelWidth, px, py, DotPlot.DataLabelAngle);
                         } else {
                             const dx: number = size.width / DotPlot.DataLabelXOffset,
                                 dy: number = size.height / DotPlot.DataLabelYOffset;
@@ -534,7 +539,7 @@ module powerbi.extensibility.visual {
                     "transform": (dataPoint: DotPlotDataGroup) => {
                         return translate(
                             this.getXDotPositionByIndex(dataPoint.index),
-                            this.layout.margin.top + this.data.labelFontSize);
+                            this.layout.margin.top + this.data.labelFontSize + this.data.settings.maxLabelWidth );
                     },
                     "stroke": DotPlot.DotGroupStrokeColor,
                     "stroke-width": this.strokeWidth
@@ -761,7 +766,6 @@ module powerbi.extensibility.visual {
             if (this.settings.categoryAxis.showAxisTitle) {
                 const titleWidth: number = textMeasurementService.measureSvgTextWidth(
                     DotPlot.getCategoryTextProperties(this.data.categoryAxisName));
-
                 this.xAxisSelection
                     .append("text")
                     .text(this.data.categoryAxisName)
@@ -774,7 +778,7 @@ module powerbi.extensibility.visual {
                         "class": DotPlot.XAxisLabelSelector.className,
                         "transform": translate(
                             this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
-                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset)
+                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset + this.data.settings.maxLabelWidth)
                     });
             }
         }
