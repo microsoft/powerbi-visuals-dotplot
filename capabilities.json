@@ -147,15 +147,30 @@
                     },
                     "suppressFormatPainterCopy": true
                 },
-                "fontSize": {
-                    "displayName": "Text Size",
-                    "displayNameKey": "Visual_TextSize",
-                    "type": {
-                        "formatting": {
-                            "fontSize": true
-                        }
-                    }
+              "fontSize": {
+                "displayName": "Text Size",
+                "displayNameKey": "Visual_TextSize",
+                "type": {
+                  "formatting": {
+                    "fontSize": true
+                  }
                 }
+              },
+               "orientation": {
+                    "displayName": "Orientation",
+                    "type": {
+                      "enumeration": [
+                        {
+                          "value": "Horizontal",
+                          "displayName": "Horizontal"
+                        },                       
+                        {
+                          "value": "Vertical",
+                          "displayName": "Vertical"
+                        }
+                      ]
+                    }
+                  }
             }
         }
     }

@@ -39,6 +39,7 @@ namespace powerbi.extensibility.visual.test {
     // DotPlot1442374105856
     import VisualClass = powerbi.extensibility.visual.DotPlot1442374105856.DotPlot;
     import VisualSettings = powerbi.extensibility.visual.DotPlot1442374105856.DotPlotSettings;
+    import DotPlotLabelsOrientation = powerbi.extensibility.visual.DotPlot1442374105856.DotPlotLabelsOrientation;
 
     describe("DotPlot", () => {
         let visualBuilder: DotPlotBuilder,
@@ -292,6 +293,13 @@ namespace powerbi.extensibility.visual.test {
                         .forEach((element: JQuery) => {
                             expect(element.text().split(".")[1].length).toEqual(precision);
                         });
+                });
+
+                it("orientation", () => {
+                    (dataView.metadata.objects as any).labels.orientation = DotPlotLabelsOrientation.Vertical;
+                    visualBuilder.updateFlushAllD3Transitions(dataView);
+                    visualBuilder.update(dataView);
+                    expect(visualBuilder.getSettings().maxLabelWidth).toBe(0);
                 });
 
                 it("font size", () => {

@@ -50,11 +50,14 @@ module powerbi.extensibility.visual {
         public labelDisplayUnits: number = 0;
         public labelPrecision: number = 2;
         public fontSize: number = dataLabelUtils.DefaultFontSizeInPt;
+        public orientation: DotPlotLabelsOrientation =  DotPlotLabelsOrientation.Horizontal;
+
     }
 
     export class DotPlotSettings extends DataViewObjectsParser {
         public categoryAxis: CategoryAxisSettings = new CategoryAxisSettings();
         public dataPoint: DataPointSettings = new DataPointSettings();
         public labels: LabelsSettings = new LabelsSettings();
+        public maxLabelWidth: number = 0;
     }
 }
