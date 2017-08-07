@@ -290,7 +290,6 @@ module powerbi.extensibility.visual {
                 * DotPlot.LabelWidthFactor);
 
             if (settings.labels.orientation === DotPlotLabelsOrientation.Vertical) {
-                debugger;
                 settings.maxLabelWidth = maxLabelWidth;
             }
             const diameter: number = DotPlot.RadiusFactor * radius + DotPlot.ExtraDiameter,
@@ -780,7 +779,7 @@ module powerbi.extensibility.visual {
                         "class": DotPlot.XAxisLabelSelector.className,
                         "transform": translate(
                             this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
-                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset - this.data.settings.maxLabelWidth)
+                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset - this.data.settings.maxLabelWidth);
                     });
             }
         }
