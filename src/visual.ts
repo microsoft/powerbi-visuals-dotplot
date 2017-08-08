@@ -1,3 +1,4 @@
+
 /*
  *  Power BI Visualizations
  *
@@ -186,6 +187,7 @@ module powerbi.extensibility.visual {
 
         private radius: number = 5;
         private strokeWidth: number = 1;
+        private static verticalLabelMarginRatio: number = 0.2;
 
         private visualHost: IVisualHost;
 
@@ -218,7 +220,6 @@ module powerbi.extensibility.visual {
 
                 return null;
             }
-
             const settings: DotPlotSettings = this.parseSettings(dataView),
                 categoryColumn: DataViewCategoryColumn = dataView.categorical.categories[0],
                 valueColumn: DataViewValueColumn = dataView.categorical.values[0],
@@ -425,7 +426,6 @@ module powerbi.extensibility.visual {
             if (!options) {
                 return;
             }
-
             this.layout.viewport = options.viewport;
 
             const dataView: DataView = options.dataViews && options.dataViews[0]
@@ -497,8 +497,7 @@ module powerbi.extensibility.visual {
                                 dx: number = size.width / DotPlot.DataLabelXOffset
                                     + size.height * DotPlot.DataLabelXOffsetIndex,
                                 dy: number = size.height + size.height / DotPlot.DataLabelYOffset;
-
-                            return translateAndRotate(dx, -dy + this.data.settings.maxLabelWidth, px, py, DotPlot.DataLabelAngle);
+                            return translateAndRotate(dx, -dy + this.data.settings.maxLabelWidth - (DotPlot.MaxLabelWidth >= this.data.settings.maxLabelWidth ? 0 : this.data.settings.maxLabelWidth * DotPlot.verticalLabelMarginRatio), px, py, DotPlot.DataLabelAngle);
                         } else {
                             const dx: number = size.width / DotPlot.DataLabelXOffset,
                                 dy: number = size.height / DotPlot.DataLabelYOffset;
@@ -778,7 +777,7 @@ module powerbi.extensibility.visual {
                         "class": DotPlot.XAxisLabelSelector.className,
                         "transform": translate(
                             this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
-                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset + this.data.settings.maxLabelWidth)
+                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset - this.data.settings.maxLabelWidth)
                     });
             }
         }
