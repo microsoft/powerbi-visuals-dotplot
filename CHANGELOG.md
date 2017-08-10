@@ -1,3 +1,6 @@
+## 1.1.2
+* Fix for "X-Axis label displayes in the center of visual"
+
 ## 1.1.1
 * Add an option to use vertical orientation of labels
 

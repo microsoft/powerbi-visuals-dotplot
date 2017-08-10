@@ -777,7 +777,7 @@ module powerbi.extensibility.visual {
                         "class": DotPlot.XAxisLabelSelector.className,
                         "transform": translate(
                             this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
-                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset - this.data.settings.maxLabelWidth)
+                            this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset)
                     });
             }
         }
