@@ -158,15 +158,18 @@
               },
                "orientation": {
                     "displayName": "Orientation",
+                    "displayNameKey": "Visual_Orientation",
                     "type": {
                       "enumeration": [
                         {
                           "value": "Horizontal",
-                          "displayName": "Horizontal"
+                          "displayName": "Horizontal",
+                          "displayNameKey": "Visual_Horizontal"
                         },                       
                         {
                           "value": "Vertical",
-                          "displayName": "Vertical"
+                          "displayName": "Vertical",
+                          "displayNameKey": "Visual_Vertical"
                         }
                       ]
                     }
