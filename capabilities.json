@@ -68,6 +68,7 @@
                     "displayName": "Title",
                     "displayNameKey": "Visual_Title",
                     "description": "Title options",
+                    "descriptionKey": "Visual_Description_Title",
                     "type": {
                         "bool": true
                     }
@@ -106,6 +107,7 @@
             "displayName": "Data labels",
             "displayNameKey": "Visual_DataLabels",
             "description": "Display data label options",
+            "descriptionKey": "Visual_Description_DataLabels",
             "properties": {
                 "show": {
                     "displayName": "Show",
@@ -118,6 +120,7 @@
                     "displayName": "Color",
                     "displayNameKey": "Visual_Color",
                     "description": "Select color for data labels",
+                    "descriptionKey": "Visual_Description_Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -130,6 +133,7 @@
                     "displayName": "Display units",
                     "displayNameKey": "Visual_DisplayUnits",
                     "description": "Select the units (millions, billions, etc.)",
+                    "descriptionKey": "Visual_Description_DisplayUnits",
                     "type": {
                         "formatting": {
                             "labelDisplayUnits": true
@@ -141,6 +145,7 @@
                     "displayName": "Decimal places",
                     "displayNameKey": "Visual_DecimalPlaces",
                     "description": "Select the number of decimal places to display",
+                    "descriptionKey": "Visual_Description_DecimalPlaces",
                     "placeHolderText": "Auto",
                     "type": {
                         "numeric": true
