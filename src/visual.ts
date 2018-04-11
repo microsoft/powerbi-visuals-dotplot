@@ -73,6 +73,8 @@ module powerbi.extensibility.visual {
     import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
     import createTooltipServiceWrapper = powerbi.extensibility.utils.tooltip.createTooltipServiceWrapper;
 
+    const ValueText = "Visual_Value";
+
     export class DotPlot implements IVisual {
         private static MinOpacity: number = 0;
         private static MaxOpacity: number = 1;
@@ -197,9 +199,9 @@ module powerbi.extensibility.visual {
             labelOrientation: DotPlotLabelsOrientation.Horizontal
         };
 
-        private static getTooltipData(value: any): VisualTooltipDataItem[] {
+        private static getTooltipData(value: any, localizationManager: ILocalizationManager): VisualTooltipDataItem[] {
             return [{
-                displayName: "Value",
+                displayName: localizationManager.getDisplayName(ValueText),
                 value: value.toString()
             }];
         }
@@ -227,7 +229,8 @@ module powerbi.extensibility.visual {
                     const convertedValue: number = Number(value);
 
                     return convertedValue || DotPlot.DefaultValue;
-                }) as number[];
+                }) as number[],
+                localizationManager: ILocalizationManager = visualHost.createLocalizationManager();
 
             const minValue: number = _.min<number>(valueValues),
                 maxValue: number = _.max<number>(valueValues);
@@ -319,7 +322,7 @@ module powerbi.extensibility.visual {
                         y: yScale(level),
                         tooltipInfo: DotPlot.getTooltipData(value
                             .toFixed(settings.labels.labelPrecision)
-                            .toString())
+                            .toString(), localizationManager)
                     });
                 }
 
@@ -329,7 +332,7 @@ module powerbi.extensibility.visual {
                     .createSelectionId();
 
                 const tooltipInfo: VisualTooltipDataItem[] = DotPlot.getTooltipData(
-                    value.toFixed(settings.labels.labelPrecision));
+                    value.toFixed(settings.labels.labelPrecision), localizationManager);
 
                 dataPointsGroup.push({
                     value,
