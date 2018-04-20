@@ -95,7 +95,6 @@ module powerbi.extensibility.visual {
         private static DataLabelAngle: number = -90;
         private static DataLabelXOffsetIndex: number = 0.3;
 
-        private static DefaultRadius: number = 5;
         private static DefaultStrokeWidth: number = 1;
 
         private static DefaultFontSize: number = 11;
@@ -187,7 +186,6 @@ module powerbi.extensibility.visual {
         private interactivityService: IInteractivityService;
         private scaleType: string = AxisScale.linear;
 
-        private radius: number = 5;
         private strokeWidth: number = 1;
         private static verticalLabelMarginRatio: number = 0.2;
 
@@ -210,7 +208,6 @@ module powerbi.extensibility.visual {
             dataView: DataView,
             height: number,
             colors: IColorPalette,
-            radius: number,
             visualHost: IVisualHost,
             layout: VisualLayout
         ): DotPlotData {
@@ -295,6 +292,8 @@ module powerbi.extensibility.visual {
             const maxLabelHeight: number = settings.labels.orientation === DotPlotLabelsOrientation.Vertical
                 ? maxLabelWidth
                 : 0;
+
+            const radius: number = settings.dataPoint.radius;
 
             const diameter: number = DotPlot.RadiusFactor * radius + DotPlot.ExtraDiameter,
                 dotsTotalHeight: number = height - maxXAxisHeight
@@ -383,6 +382,8 @@ module powerbi.extensibility.visual {
                     settings.labels.labelPrecision),
                 LabelsSettings.MaxLabelPrecision);
 
+            settings.dataPoint.parse();
+
             return settings;
         }
 
@@ -438,11 +439,11 @@ module powerbi.extensibility.visual {
                 ? options.dataViews[0]
                 : null;
             this.layout.viewportIn.height = this.layout.viewportIn.height;
+
             const data: DotPlotData = DotPlot.converter(
                 dataView,
                 this.layout.viewportIn.height,
                 this.colorPalette,
-                this.radius,
                 this.visualHost,
                 this.layout
             );
@@ -459,7 +460,7 @@ module powerbi.extensibility.visual {
                 width: Math.max(
                     this.layout.viewportIn.width,
                     this.data.dataGroups.length
-                    * (this.radius * DotPlot.RadiusFactor + DotPlot.ExtraDiameterOfDataGroups)
+                    * (this.data.settings.dataPoint.radius * DotPlot.RadiusFactor + DotPlot.ExtraDiameterOfDataGroups)
                     + this.data.maxLabelWidth)
             };
 
@@ -570,7 +571,7 @@ module powerbi.extensibility.visual {
 
             circleSelection.attr({
                 cy: (dataPoint: DotPlotDataPoint) => dataPoint.y,
-                r: this.radius,
+                r: this.data.settings.dataPoint.radius,
                 fill: this.settings.dataPoint.fill
             });
 
@@ -624,7 +625,7 @@ module powerbi.extensibility.visual {
                     },
                     y: (dataGroup: DotPlotDataGroup) => {
                         const y: number = (_.isEmpty(dataGroup.dataPoints)
-                            ? this.data.dotsTotalHeight + this.radius * DotPlot.RadiusFactor
+                            ? this.data.dotsTotalHeight + this.data.settings.dataPoint.radius * DotPlot.RadiusFactor
                             : _.last(dataGroup.dataPoints).y) + this.data.labelFontSize;
 
                         return y - dataGroup.size.height;
@@ -635,7 +636,7 @@ module powerbi.extensibility.visual {
                         && dataGroup.dataPoints
                         && this.layout.viewportIn.height
                         - this.data.maxXAxisHeight
-                        + this.radius * DotPlot.RadiusFactor > this.data.labelFontSize);
+                        + this.data.settings.dataPoint.radius * DotPlot.RadiusFactor > this.data.labelFontSize);
                 },
                 style: {
                     "fill": this.settings.labels.color,

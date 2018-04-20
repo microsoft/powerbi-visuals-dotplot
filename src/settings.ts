@@ -38,7 +38,18 @@ module powerbi.extensibility.visual {
     }
 
     export class DataPointSettings {
+        private minRadius: number = 1;
+        private maxRadius: number = 15;
+
         public fill: string = "#00B8AA";
+        public radius: number = 5;
+
+        public parse(): void {
+            this.radius = Math.min(
+                this.maxRadius,
+                Math.max(this.minRadius, this.radius)
+            );
+        }
     }
 
     export class LabelsSettings {
@@ -50,7 +61,7 @@ module powerbi.extensibility.visual {
         public labelDisplayUnits: number = 0;
         public labelPrecision: number = 2;
         public fontSize: number = dataLabelUtils.DefaultFontSizeInPt;
-        public orientation: DotPlotLabelsOrientation =  DotPlotLabelsOrientation.Horizontal;
+        public orientation: DotPlotLabelsOrientation = DotPlotLabelsOrientation.Horizontal;
 
     }
 

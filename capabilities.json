@@ -87,8 +87,8 @@
             }
         },
         "dataPoint": {
-            "displayName": "Data colors",
-            "displayNameKey": "Visual_DataColors",
+            "displayName": "Dots",
+            "displayNameKey": "Visual_Dots",
             "properties": {
                 "fill": {
                     "displayName": "Fill",
@@ -99,6 +99,13 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "radius": {
+                    "displayName": "Radius",
+                    "displayNameKey": "Visual_Radius",
+                    "type": {
+                        "numeric": true
                     }
                 }
             }

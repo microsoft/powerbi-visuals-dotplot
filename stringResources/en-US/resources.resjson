@@ -5,7 +5,7 @@
 	"Visual_Show": "Show",
 	"Visual_Title": "Title",
 	"Visual_LabelColor": "Label color",
-	"Visual_DataColors": "Data colors",
+	"Visual_Dots": "Dots",
 	"Visual_Fill": "Fill",
 	"Visual_DataLabels": "Data labels",
 	"Visual_Color": "Color",
@@ -20,5 +20,6 @@
 	"Visual_Description_Color": "Select color for data labels",
 	"Visual_Description_DisplayUnits": "Select the units (millions, billions, etc.)",
 	"Visual_Description_DecimalPlaces": "Select the number of decimal places to display",
-	"Visual_Value": "Value"
+	"Visual_Value": "Value",
+	"Visual_Radius": "Radius"
 }
