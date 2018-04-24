@@ -295,13 +295,6 @@ namespace powerbi.extensibility.visual.test {
                         });
                 });
 
-                it("orientation", () => {
-                    (dataView.metadata.objects as any).labels.orientation = DotPlotLabelsOrientation.Vertical;
-                    visualBuilder.updateFlushAllD3Transitions(dataView);
-                    visualBuilder.update(dataView);
-                    expect(visualBuilder.getSettings().maxLabelWidth).toBe(0);
-                });
-
                 it("font size", () => {
                     const fontSize: number = 23,
                         fontSizeInPt: string = "30.6667px";
