@@ -73,6 +73,7 @@ module powerbi.extensibility.visual {
         categoryColumn: DataViewCategoryColumn;
         dotsTotalHeight: number;
         maxLabelWidth: number;
+        maxLabelHeight: number;
         labelFontSize: number;
         maxCategoryWidth: number;
     }

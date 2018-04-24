@@ -29,17 +29,13 @@
 module powerbi.extensibility.visual.test {
     // powerbi.extensibility.utils.test
     import VisualBuilderBase = powerbi.extensibility.utils.test.VisualBuilderBase;
-    import VisualSettings = powerbi.extensibility.visual.DotPlot1442374105856.DotPlotSettings;
+
     // DotPlot1442374105856
     import VisualClass = powerbi.extensibility.visual.DotPlot1442374105856.DotPlot;
 
     export class DotPlotBuilder extends VisualBuilderBase<VisualClass> {
         constructor(width: number, height: number) {
             super(width, height, "DotPlot1442374105856");
-        }
-
-        public getSettings(): VisualSettings {
-            return new VisualSettings();
         }
 
         protected build(options: VisualConstructorOptions) {

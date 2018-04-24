@@ -58,6 +58,5 @@ module powerbi.extensibility.visual {
         public categoryAxis: CategoryAxisSettings = new CategoryAxisSettings();
         public dataPoint: DataPointSettings = new DataPointSettings();
         public labels: LabelsSettings = new LabelsSettings();
-        public maxLabelWidth: number = 0;
     }
 }
