@@ -209,8 +209,8 @@ namespace powerbi.extensibility.visual.test {
                 });
             });
 
-            describe("Data colors", () => {
-                it("default color", () => {
+            describe("Dots", () => {
+                it("specified color should be applied to all of dots", () => {
                     const color: string = "#112233";
 
                     dataView.metadata.objects = {
@@ -226,6 +226,27 @@ namespace powerbi.extensibility.visual.test {
                         .map($)
                         .forEach((element: JQuery) => {
                             assertColorsMatch(element.css("fill"), color);
+                        });
+                });
+
+                it("specified radius should be applied to all of dots", () => {
+                    const radius: number = 5;
+
+                    dataView.metadata.objects = {
+                        dataPoint: {
+                            radius,
+                        }
+                    };
+
+                    visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                    visualBuilder.dots
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            const parsedRadius: number = Number.parseInt(element.attr("r"));
+
+                            expect(parsedRadius).toBe(radius);
                         });
                 });
             });
