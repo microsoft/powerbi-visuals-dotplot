@@ -209,8 +209,8 @@ namespace powerbi.extensibility.visual.test {
                 });
             });
 
-            describe("Data colors", () => {
-                it("default color", () => {
+            describe("Dots", () => {
+                it("specified color should be applied to all of dots", () => {
                     const color: string = "#112233";
 
                     dataView.metadata.objects = {
@@ -226,6 +226,27 @@ namespace powerbi.extensibility.visual.test {
                         .map($)
                         .forEach((element: JQuery) => {
                             assertColorsMatch(element.css("fill"), color);
+                        });
+                });
+
+                it("specified radius should be applied to all of dots", () => {
+                    const radius: number = 5;
+
+                    dataView.metadata.objects = {
+                        dataPoint: {
+                            radius,
+                        }
+                    };
+
+                    visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                    visualBuilder.dots
+                        .toArray()
+                        .map($)
+                        .forEach((element: JQuery) => {
+                            const parsedRadius: number = Number.parseInt(element.attr("r"));
+
+                            expect(parsedRadius).toBe(radius);
                         });
                 });
             });
@@ -295,13 +316,6 @@ namespace powerbi.extensibility.visual.test {
                         });
                 });
 
-                it("orientation", () => {
-                    (dataView.metadata.objects as any).labels.orientation = DotPlotLabelsOrientation.Vertical;
-                    visualBuilder.updateFlushAllD3Transitions(dataView);
-                    visualBuilder.update(dataView);
-                    expect(visualBuilder.getSettings().maxLabelWidth).toBe(0);
-                });
-
                 it("font size", () => {
                     const fontSize: number = 23,
                         fontSizeInPt: string = "30.6667px";
@@ -317,6 +331,30 @@ namespace powerbi.extensibility.visual.test {
                             expect(element.css("font-size")).toBe(fontSizeInPt);
                         });
                 });
+            });
+        });
+
+        describe("Capabilities tests", () => {
+            it("all items having displayName should have displayNameKey property", () => {
+                jasmine.getJSONFixtures().fixturesPath = "base";
+
+                let jsonData = getJSONFixture("capabilities.json");
+
+                let objectsChecker: Function = (obj) => {
+                    for (let property in obj) {
+                        let value: any = obj[property];
+
+                        if (value.displayName) {
+                            expect(value.displayNameKey).toBeDefined();
+                        }
+
+                        if (typeof value === "object") {
+                            objectsChecker(value);
+                        }
+                    }
+                };
+
+                objectsChecker(jsonData);
             });
         });
     });
