@@ -1,3 +1,6 @@
+## 1.4.0
+* Added localization for all supported languages
+
 ## 1.2.1
 * FIX: Fixed an issue that caused Dot Plot to stop working in IE 11
 
