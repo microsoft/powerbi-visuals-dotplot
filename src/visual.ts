@@ -73,6 +73,9 @@ module powerbi.extensibility.visual {
     import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
     import createTooltipServiceWrapper = powerbi.extensibility.utils.tooltip.createTooltipServiceWrapper;
 
+    // powerbi.extensibility.utils.colorutils
+    import ColorHelper = powerbi.extensibility.utils.color.ColorHelper;
+
     const ValueText = "Visual_Value";
 
     export class DotPlot implements IVisual {
@@ -177,6 +180,7 @@ module powerbi.extensibility.visual {
         private behavior: IInteractiveBehavior;
 
         private colorPalette: IColorPalette;
+        private colorHelper: ColorHelper;
         private durationAnimations: number = 0;
 
         private data: DotPlotData;
@@ -208,6 +212,7 @@ module powerbi.extensibility.visual {
             dataView: DataView,
             height: number,
             colors: IColorPalette,
+            colorHelper: ColorHelper,
             visualHost: IVisualHost,
             layout: VisualLayout
         ): DotPlotData {
@@ -219,7 +224,7 @@ module powerbi.extensibility.visual {
 
                 return null;
             }
-            const settings: DotPlotSettings = this.parseSettings(dataView),
+            const settings: DotPlotSettings = this.parseSettings(dataView, colorHelper),
                 categoryColumn: DataViewCategoryColumn = dataView.categorical.categories[0],
                 valueColumn: DataViewValueColumn = dataView.categorical.values[0],
                 valueValues: number[] = valueColumn.values.map((value: PrimitiveValue) => {
@@ -373,7 +378,7 @@ module powerbi.extensibility.visual {
             return [left, max];
         }
 
-        private static parseSettings(dataView: DataView): DotPlotSettings {
+        private static parseSettings(dataView: DataView, colorHelper: ColorHelper): DotPlotSettings {
             const settings: DotPlotSettings = DotPlotSettings.parse<DotPlotSettings>(dataView);
 
             settings.labels.labelPrecision = Math.min(
@@ -383,6 +388,11 @@ module powerbi.extensibility.visual {
                 LabelsSettings.MaxLabelPrecision);
 
             settings.dataPoint.parse();
+
+            // convert colors for high contrast mode
+            settings.categoryAxis.labelColor = colorHelper.getHighContrastColor("foreground", settings.categoryAxis.labelColor);
+            settings.dataPoint.fill = colorHelper.getHighContrastColor("foreground", settings.dataPoint.fill);
+            settings.labels.color = colorHelper.getHighContrastColor("foreground", settings.labels.color);
 
             return settings;
         }
@@ -403,6 +413,7 @@ module powerbi.extensibility.visual {
             this.interactivityService = createInteractivityService(this.visualHost);
 
             this.colorPalette = this.visualHost.colorPalette;
+            this.colorHelper = new ColorHelper(this.colorPalette);
 
             this.layout = new VisualLayout(null, DotPlot.Margin);
 
@@ -444,6 +455,7 @@ module powerbi.extensibility.visual {
                 dataView,
                 this.layout.viewportIn.height,
                 this.colorPalette,
+                this.colorHelper,
                 this.visualHost,
                 this.layout
             );
@@ -547,11 +559,11 @@ module powerbi.extensibility.visual {
                             this.getXDotPositionByIndex(dataPoint.index),
                             this.layout.margin.top + this.data.labelFontSize + this.data.maxLabelHeight);
                     },
-                    "stroke": DotPlot.DotGroupStrokeColor,
+                    "stroke": (dataPoint: DotPlotDataGroup) => this.colorHelper.isHighContrast ? dataPoint.color : DotPlot.DotGroupStrokeColor,
                     "stroke-width": this.strokeWidth
                 })
                 .style("fill-opacity", (item: DotPlotDataGroup) => {
-                    return getFillOpacity(
+                    return getOpacity(
                         item.selected,
                         item.highlight,
                         hasSelection,
@@ -572,7 +584,7 @@ module powerbi.extensibility.visual {
             circleSelection.attr({
                 cy: (dataPoint: DotPlotDataPoint) => dataPoint.y,
                 r: this.data.settings.dataPoint.radius,
-                fill: this.settings.dataPoint.fill
+                fill: this.colorHelper.isHighContrast ? this.colorHelper.getThemeColor() : this.settings.dataPoint.fill
             });
 
             this.renderTooltip(dotGroupSelection);
@@ -592,6 +604,7 @@ module powerbi.extensibility.visual {
                     columns: dotGroupSelection,
                     clearCatcher: this.clearCatcher,
                     interactivityService: this.interactivityService,
+                    isHighContrastMode: this.colorHelper.isHighContrast
                 };
 
                 this.interactivityService.bind(
@@ -751,6 +764,13 @@ module powerbi.extensibility.visual {
                 .call(xAxis)
                 .selectAll(`g${DotPlot.TickTextSelector.selectorName}`)
                 .style("fill", this.settings.categoryAxis.labelColor);
+
+            if (this.colorHelper.isHighContrast) {
+                this.xAxisSelection.selectAll("path")
+                    .style("stroke", this.settings.categoryAxis.labelColor);
+                this.xAxisSelection.selectAll("line")
+                    .style("stroke", this.settings.categoryAxis.labelColor);
+            }
 
             this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
                 .append("title")

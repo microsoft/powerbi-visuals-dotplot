@@ -28,7 +28,7 @@ module powerbi.extensibility.visual {
     export const DimmedOpacity: number = 0.4,
         DefaultOpacity: number = 1.0;
 
-    export function getFillOpacity(
+    export function getOpacity(
         selected: boolean,
         highlight: boolean,
         hasSelection: boolean,
