@@ -379,7 +379,7 @@ namespace powerbi.extensibility.visual.test {
                 });
             });
 
-            it("should not use fill style", (done) => {
+            it("should use stroke style", (done) => {
                 visualBuilder.updateRenderTimeout(dataView, () => {
                     const dots: JQuery[] = visualBuilder.dots.toArray().map($);
                     expect(isColorAppliedToElements(dots, foregroundColor, "stroke"));
