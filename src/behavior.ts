@@ -37,12 +37,14 @@ module powerbi.extensibility.visual {
         columns: Selection<DotPlotDataGroup>;
         clearCatcher: Selection<any>;
         interactivityService: IInteractivityService;
+        isHighContrastMode: boolean;
     }
 
     export class DotplotBehavior implements IInteractiveBehavior {
         private columns: Selection<DotPlotDataGroup>;
         private clearCatcher: Selection<any>;
         private interactivityService: IInteractivityService;
+        private isHighContrastMode: boolean;
 
         public bindEvents(
             options: DotplotBehaviorOptions,
@@ -51,6 +53,7 @@ module powerbi.extensibility.visual {
             this.columns = options.columns;
             this.clearCatcher = options.clearCatcher;
             this.interactivityService = options.interactivityService;
+            this.isHighContrastMode = options.isHighContrastMode;
 
             this.columns.on("click", (dataPoint: DotPlotDataGroup) => {
                 selectionHandler.handleSelection(
@@ -66,8 +69,16 @@ module powerbi.extensibility.visual {
         public renderSelection(hasSelection: boolean): void {
             const hasHighlights: boolean = this.interactivityService.hasSelection();
 
-            this.columns.style("fill-opacity", (dataPoint: DotPlotDataGroup) => {
-                return getFillOpacity(
+            this.changeAttributeOpacity("fill-opacity", hasSelection, hasHighlights);
+
+            if (this.isHighContrastMode) {
+                this.changeAttributeOpacity("stroke-opacity", hasSelection, hasHighlights);
+            }
+        }
+
+        private changeAttributeOpacity(attributeName: string, hasSelection: boolean, hasHighlights: boolean): void {
+            this.columns.style(attributeName, (dataPoint: DotPlotDataGroup) => {
+                return getOpacity(
                     dataPoint.selected,
                     dataPoint.highlight,
                     !dataPoint.highlight && hasSelection,

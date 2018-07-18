@@ -27,7 +27,24 @@
 /// <reference path="../_references.ts"/>
 
 module powerbi.extensibility.visual.test.helpers {
+    import assertColorsMatch = powerbi.extensibility.utils.test.helpers.color.assertColorsMatch;
+
     export function getSolidColorStructuralObject(color: string): any {
         return { solid: { color } };
     }
+
+    export function isColorAppliedToElements(
+        elements: JQuery[],
+        color?: string,
+        colorStyleName: string = "fill"
+    ): boolean {
+        return elements.some((element: JQuery) => {
+            const currentColor: string = element.css(colorStyleName);
+            if (!currentColor || !color) {
+                return currentColor === color;
+            }
+            return assertColorsMatch(currentColor, color);
+        });
+    }
 }
+

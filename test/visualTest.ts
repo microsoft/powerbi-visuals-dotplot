@@ -41,6 +41,8 @@ namespace powerbi.extensibility.visual.test {
     import VisualSettings = powerbi.extensibility.visual.DotPlot1442374105856.DotPlotSettings;
     import DotPlotLabelsOrientation = powerbi.extensibility.visual.DotPlot1442374105856.DotPlotLabelsOrientation;
 
+    import isColorAppliedToElements = powerbi.extensibility.visual.test.helpers.isColorAppliedToElements;
+
     describe("DotPlot", () => {
         let visualBuilder: DotPlotBuilder,
             defaultDataViewBuilder: DotPlotData,
@@ -190,7 +192,7 @@ namespace powerbi.extensibility.visual.test {
                     expect(visualBuilder.xAxisLabel).not.toBeInDOM();
                 });
 
-                it("lebel color", () => {
+                it("label color", () => {
                     const color: string = "#112233";
 
                     (dataView.metadata.objects as any).categoryAxis.showAxisTitle = true;
@@ -355,6 +357,34 @@ namespace powerbi.extensibility.visual.test {
                 };
 
                 objectsChecker(jsonData);
+            });
+        });
+
+        describe("High contrast mode", () => {
+            const backgroundColor: string = "#000000";
+            const foregroundColor: string = "ff00ff";
+
+            beforeEach(() => {
+                visualBuilder.visualHost.colorPalette.isHighContrast = true;
+
+                visualBuilder.visualHost.colorPalette.background = { value: backgroundColor };
+                visualBuilder.visualHost.colorPalette.foreground = { value: foregroundColor };
+            });
+
+            it("should not use fill style", (done) => {
+                visualBuilder.updateRenderTimeout(dataView, () => {
+                    const dots: JQuery[] = visualBuilder.dots.toArray().map($);
+                    expect(isColorAppliedToElements(dots, null, "fill"));
+                    done();
+                });
+            });
+
+            it("should use stroke style", (done) => {
+                visualBuilder.updateRenderTimeout(dataView, () => {
+                    const dots: JQuery[] = visualBuilder.dots.toArray().map($);
+                    expect(isColorAppliedToElements(dots, foregroundColor, "stroke"));
+                    done();
+                });
             });
         });
     });
