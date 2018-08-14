@@ -3,7 +3,7 @@
     "name": "DotPlot",
     "displayName": "Dot Plot 1.6.0",
     "guid": "DotPlot1442374105856",
-    "visualClassName": "DotPlot 1.6.0",
+    "visualClassName": "DotPlot",
     "version": "1.6.0",
     "description": "A dot plot is used to show a representation of the distribution of frequencies. It is most often used to show counts of an occurrence.",
     "supportUrl": "https://community.powerbi.com",
