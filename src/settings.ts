@@ -24,50 +24,55 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual {
-    // powerbi.extensibility.utils.dataview
-    import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
+// module powerbi.extensibility.visual { //REVIEW
 
-    // powerbi.extensibility.utils.chart
-    import dataLabelUtils = powerbi.extensibility.utils.chart.dataLabel.utils;
+// powerbi.extensibility.utils.dataview
+import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
+//import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
+import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
-    export class CategoryAxisSettings {
-        public show: boolean = true;
-        public showAxisTitle: boolean = true;
-        public labelColor: string = dataLabelUtils.defaultLabelColor;
+// powerbi.extensibility.utils.chart
+// import dataLabelUtils = powerbi.extensibility.utils.chart.dataLabel.utils;
+import { dataLabelUtils } from "powerbi-visuals-utils-chartutils";
+
+import { DotPlotLabelsOrientation } from "./dataInterfaces";
+
+export class CategoryAxisSettings {
+    public show: boolean = true;
+    public showAxisTitle: boolean = true;
+    public labelColor: string = dataLabelUtils.defaultLabelColor;
+}
+
+export class DataPointSettings {
+    private minRadius: number = 1;
+    private maxRadius: number = 15;
+
+    public fill: string = "#00B8AA";
+    public radius: number = 5;
+
+    public parse(): void {
+        this.radius = Math.min(
+            this.maxRadius,
+            Math.max(this.minRadius, this.radius)
+        );
     }
+}
 
-    export class DataPointSettings {
-        private minRadius: number = 1;
-        private maxRadius: number = 15;
+export class LabelsSettings {
+    public static MinLabelPrecision: number = 0;
+    public static MaxLabelPrecision: number = 17;
 
-        public fill: string = "#00B8AA";
-        public radius: number = 5;
+    public show: boolean = true;
+    public color: string = dataLabelUtils.defaultLabelColor;
+    public labelDisplayUnits: number = 0;
+    public labelPrecision: number = 2;
+    public fontSize: number = dataLabelUtils.DefaultFontSizeInPt;
+    public orientation: DotPlotLabelsOrientation = DotPlotLabelsOrientation.Horizontal;
 
-        public parse(): void {
-            this.radius = Math.min(
-                this.maxRadius,
-                Math.max(this.minRadius, this.radius)
-            );
-        }
-    }
+}
 
-    export class LabelsSettings {
-        public static MinLabelPrecision: number = 0;
-        public static MaxLabelPrecision: number = 17;
-
-        public show: boolean = true;
-        public color: string = dataLabelUtils.defaultLabelColor;
-        public labelDisplayUnits: number = 0;
-        public labelPrecision: number = 2;
-        public fontSize: number = dataLabelUtils.DefaultFontSizeInPt;
-        public orientation: DotPlotLabelsOrientation = DotPlotLabelsOrientation.Horizontal;
-
-    }
-
-    export class DotPlotSettings extends DataViewObjectsParser {
-        public categoryAxis: CategoryAxisSettings = new CategoryAxisSettings();
-        public dataPoint: DataPointSettings = new DataPointSettings();
-        public labels: LabelsSettings = new LabelsSettings();
-    }
+export class DotPlotSettings extends DataViewObjectsParser {
+    public categoryAxis: CategoryAxisSettings = new CategoryAxisSettings();
+    public dataPoint: DataPointSettings = new DataPointSettings();
+    public labels: LabelsSettings = new LabelsSettings();
 }

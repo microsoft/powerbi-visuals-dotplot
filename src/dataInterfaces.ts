@@ -24,57 +24,69 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual {
+import powerbi from "powerbi-visuals-api";
+// NEW
+import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
+import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
+
+import { DotPlotSettings } from "./settings";
+
+// module powerbi.extensibility.visual { //REVIEW
+
     // powerbi.visuals
-    import ISelectionId = powerbi.visuals.ISelectionId;
+import ISelectionId = powerbi.visuals.ISelectionId;
 
-    // powerbi.extensibility.utils.interactivity
-    import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint;
+// powerbi.extensibility.utils.interactivity
+//import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint; //REVIEW
+import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
+import SelectableDataPoint = interactivityService.SelectableDataPoint;
 
-    // powerbi.extensibility.utils.chart
-    import IDataLabelInfo = powerbi.extensibility.utils.chart.dataLabel.IDataLabelInfo;
+// powerbi.extensibility.utils.chart
+import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
+// import IDataLabelInfo = powerbi.extensibility.utils.chart.dataLabel.IDataLabelInfo;
+import IDataLabelInfo = dataLabelInterfaces.IDataLabelInfo;
 
-    export enum DotPlotLabelsOrientation {
-        Horizontal = <any>"Horizontal",
-        Vertical = <any>"Vertical",
-    }
-
-    export interface DotPlotChartCategory {
-        value: string;
-        selectionId: ISelectionId;
-    }
-
-    export interface DotPlotDataPoint {
-        y: number;
-        tooltipInfo: VisualTooltipDataItem[];
-    }
-
-    export interface DotPlotDataGroup extends
-        SelectableDataPoint,
-        IDataLabelInfo {
-
-        label: string;
-        value: number;
-        category: DotPlotChartCategory;
-        color: string;
-        tooltipInfo: VisualTooltipDataItem[];
-        dataPoints: DotPlotDataPoint[];
-        highlight: boolean;
-        index: number;
-        labelFontSize: string;
-    }
-
-    export interface DotPlotData {
-        dataGroups: DotPlotDataGroup[];
-        settings: DotPlotSettings;
-        categoryAxisName: string;
-        maxXAxisHeight: number;
-        categoryLabelHeight: number;
-        categoryColumn: DataViewCategoryColumn;
-        dotsTotalHeight: number;
-        maxLabelWidth: number;
-        maxLabelHeight: number;
-        labelFontSize: number;
-        maxCategoryWidth: number;
-    }
+export enum DotPlotLabelsOrientation {
+    Horizontal = <any>"Horizontal",
+    Vertical = <any>"Vertical",
 }
+
+export interface DotPlotChartCategory {
+    value: string;
+    selectionId: ISelectionId;
+}
+
+export interface DotPlotDataPoint {
+    y: number;
+    tooltipInfo: VisualTooltipDataItem[];
+}
+
+export interface DotPlotDataGroup extends
+    SelectableDataPoint,
+    IDataLabelInfo 
+{
+    label: string;
+    value: number;
+    category: DotPlotChartCategory;
+    color: string;
+    tooltipInfo: VisualTooltipDataItem[];
+    dataPoints: DotPlotDataPoint[];
+    highlight: boolean;
+    index: number;
+    labelFontSize: string;
+}
+
+export interface DotPlotData {
+    dataGroups: DotPlotDataGroup[];
+    settings: DotPlotSettings;
+    categoryAxisName: string;
+    maxXAxisHeight: number;
+    categoryLabelHeight: number;
+    categoryColumn: DataViewCategoryColumn;
+    dotsTotalHeight: number;
+    maxLabelWidth: number;
+    maxLabelHeight: number;
+    labelFontSize: number;
+    maxCategoryWidth: number;
+}
+
