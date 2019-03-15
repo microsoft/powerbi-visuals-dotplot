@@ -23,18 +23,15 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-
-// module powerbi.extensibility.visual { //REVIEW
-    // powerbi.extensibility.utils.svg
-
-    //import IMargin = powerbi.extensibility.utils.svg.IMargin;
 import powerbi from "powerbi-visuals-api";
 
-import * as _ from "lodash";
 import { clone } from "lodash/lang";
 import { keys } from "lodash/object";
-import { axisInterfaces } from "powerbi-visuals-utils-chartutils";
-import IMargin = axisInterfaces.IMargin;
+
+// powerbi.extensibility.utils.svg
+//import IMargin = powerbi.extensibility.utils.svg.IMargin;
+import { IMargin } from "powerbi-visuals-utils-svgutils";
+
 import IViewport = powerbi.IViewport;
 
 export class VisualLayout {
@@ -78,7 +75,7 @@ export class VisualLayout {
     }
 
     public get viewportCopy(): IViewport {
-        return  clone(this.viewport);
+        return clone(this.viewport);
     }
 
     public get viewportIn(): IViewport {
