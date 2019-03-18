@@ -25,25 +25,18 @@
  */
 
 import powerbi from "powerbi-visuals-api";
-// NEW
+
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
 
 import { DotPlotSettings } from "./settings";
 
-// module powerbi.extensibility.visual { //REVIEW
-
-    // powerbi.visuals
 import ISelectionId = powerbi.visuals.ISelectionId;
 
-// powerbi.extensibility.utils.interactivity
-//import SelectableDataPoint = powerbi.extensibility.utils.interactivity.SelectableDataPoint; //REVIEW
 import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
 import SelectableDataPoint = interactivityService.SelectableDataPoint;
 
-// powerbi.extensibility.utils.chart
 import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
-// import IDataLabelInfo = powerbi.extensibility.utils.chart.dataLabel.IDataLabelInfo;
 import IDataLabelInfo = dataLabelInterfaces.IDataLabelInfo;
 
 export enum DotPlotLabelsOrientation {
@@ -63,8 +56,7 @@ export interface DotPlotDataPoint {
 
 export interface DotPlotDataGroup extends
     SelectableDataPoint,
-    IDataLabelInfo 
-{
+    IDataLabelInfo {
     label: string;
     value: number;
     category: DotPlotChartCategory;

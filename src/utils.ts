@@ -24,7 +24,6 @@
  *  THE SOFTWARE.
  */
 
-// module powerbi.extensibility.visual { //REVIEW
 export const DimmedOpacity: number = 0.4,
     DefaultOpacity: number = 1.0;
 

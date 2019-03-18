@@ -28,8 +28,6 @@ import powerbi from "powerbi-visuals-api";
 import { clone } from "lodash/lang";
 import { keys } from "lodash/object";
 
-// powerbi.extensibility.utils.svg
-//import IMargin = powerbi.extensibility.utils.svg.IMargin;
 import { IMargin } from "powerbi-visuals-utils-svgutils";
 
 import IViewport = powerbi.IViewport;

@@ -24,39 +24,30 @@
  *  THE SOFTWARE.
  */
 
-// module powerbi.extensibility.visual { //REVIEW
 import * as d3 from "d3";
 
-// NEW
 import { getOpacity } from "./utils";
 import { DotPlotDataGroup } from "./dataInterfaces";
 
 // d3
-// import Selection = d3.Selection;
 import { Selection } from "d3-selection";
 
-// powerbi.extensibility.utils.interactivity
 import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
-// import ISelectionHandler = powerbi.extensibility.utils.interactivity.ISelectionHandler;
 import ISelectionHandler = interactivityService.ISelectionHandler;
-// import IInteractiveBehavior = powerbi.extensibility.utils.interactivity.IInteractiveBehavior;
-import IInteractiveBehavior = interactivityService.IInteractiveBehavior; 
-// import IInteractivityService = powerbi.extensibility.utils.interactivity.IInteractivityService;
+import IInteractiveBehavior = interactivityService.IInteractiveBehavior;
 import IInteractivityService = interactivityService.IInteractivityService;
 
 export interface DotplotBehaviorOptions {
-    // columns: Selection<DotPlotDataGroup, any, any, any>; //review any
-    columns: Selection<any, any, any, any>; //TMP
-    clearCatcher: Selection<any, any, any, any>; // review any
+    columns: Selection<any, DotPlotDataGroup, any, any>;
+    clearCatcher: Selection<any, any, any, any>;
     interactivityService: IInteractivityService;
     isHighContrastMode: boolean;
 }
 
 export class DotplotBehavior implements IInteractiveBehavior {
-    // private columns: Selection<DotPlotDataGroup, any, any, any>; // review any
-    private columns: Selection<any, any, any, any>; //TMP
+    private columns: Selection<any, DotPlotDataGroup, any, any>;
 
-    private clearCatcher: Selection<any, any, any, any>; // review any
+    private clearCatcher: Selection<any, any, any, any>;
     private interactivityService: IInteractivityService;
     private isHighContrastMode: boolean;
 
@@ -70,11 +61,10 @@ export class DotplotBehavior implements IInteractiveBehavior {
         this.isHighContrastMode = options.isHighContrastMode;
 
         this.columns.on("click", (dataPoint: DotPlotDataGroup) => {
-            console.warn("DBG this.columns.on(click)", dataPoint);
-            // selectionHandler.handleSelection(
-            //     dataPoint,
-            //     (d3.event as MouseEvent).ctrlKey //d3.event not defined
-            // );
+            selectionHandler.handleSelection(
+                dataPoint,
+                (d3.event as MouseEvent).ctrlKey
+            );
         });
 
         this.clearCatcher.on("click", () => {

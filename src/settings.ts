@@ -24,15 +24,9 @@
  *  THE SOFTWARE.
  */
 
-// module powerbi.extensibility.visual { //REVIEW
-
-// powerbi.extensibility.utils.dataview
 import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
-//import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
-// powerbi.extensibility.utils.chart
-// import dataLabelUtils = powerbi.extensibility.utils.chart.dataLabel.utils;
 import { dataLabelUtils } from "powerbi-visuals-utils-chartutils";
 
 import { DotPlotLabelsOrientation } from "./dataInterfaces";

@@ -36,11 +36,10 @@ import powerbi from "powerbi-visuals-api";
 
 import { VisualLayout } from "./layout";
 import { DotplotBehavior, DotplotBehaviorOptions } from "./behavior";
-import { getOpacity, DimmedOpacity, DefaultOpacity } from "./utils";
+import { getOpacity } from "./utils";
 import { DotPlotData, DotPlotChartCategory, DotPlotDataGroup, DotPlotDataPoint, DotPlotLabelsOrientation } from "./dataInterfaces";
-import { DotPlotSettings, CategoryAxisSettings, DataPointSettings, LabelsSettings } from "./settings";
+import { DotPlotSettings, LabelsSettings } from "./settings";
 
-// NEW
 import IViewport = powerbi.IViewport;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
@@ -49,96 +48,61 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import IColorPalette = powerbi.extensibility.IColorPalette;
 
 import DataView = powerbi.DataView;
-import DataViewCategorical = powerbi.DataViewCategorical;
 import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
 import DataViewValueColumn = powerbi.DataViewValueColumn;
-import DataViewValueColumns = powerbi.DataViewValueColumns;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
-import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions; 
+import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
-import VisualObjectInstance = powerbi.VisualObjectInstance;
 import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
 import VisualObjectInstanceEnumeration = powerbi.VisualObjectInstanceEnumeration;
 
 // d3
-import Axis = d3.svg.Axis;
-// import { Axis } from "d3-axis";
-import LogScale = d3.scale.Log;
-// import { ScaleLogarithmic as LogScale, ScaleLinear as LinearScale, ScaleOrdinal as OrdinalScale } from "d3-scale";
-import Selection = d3.Selection;
-// import { Selection } from "d3-selection";
-import LinearScale = d3.scale.Linear;
-import OrdinalScale = d3.scale.Ordinal;
-import UpdateSelection = d3.selection.Update;
-// !!! FIND OR REPLACE UpdateSelection
+import { Axis } from "d3-axis";
+import { ScaleLogarithmic as LogScale, ScaleLinear as LinearScale, ScaleOrdinal as OrdinalScale } from "d3-scale";
+type Selection<T> = d3.Selection<any, T, any, any>;
 
 // powerbi.visuals
 import ISelectionId = powerbi.visuals.ISelectionId;
 
-// powerbi.extensibility.utils.formatting
+// powerbi-visuals-utils-formattingutils
 import { valueFormatter as vf, textMeasurementService as tms } from "powerbi-visuals-utils-formattingutils";
-// import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
 import valueFormatter = vf.valueFormatter;
-// import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
 import TextProperties = tms.TextProperties;
-// import IValueFormatter = powerbi.extensibility.utils.formatting.IValueFormatter;
 import IValueFormatter = vf.IValueFormatter;
-// import textMeasurementService = powerbi.extensibility.utils.formatting.textMeasurementService;
 import textMeasurementService = tms.textMeasurementService;
 
-// powerbi.extensibility.utils.type
+// powerbi-visuals-utils-typeutils
 import { pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
-// import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
 
-// powerbi.extensibility.utils.interactivity
+// powerbi-visuals-utils-interactivityutils
 import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
-// import appendClearCatcher = powerbi.extensibility.utils.interactivity.appendClearCatcher;
 import appendClearCatcher = interactivityService.appendClearCatcher;
-// import IInteractiveBehavior = powerbi.extensibility.utils.interactivity.IInteractiveBehavior;
 import IInteractiveBehavior = interactivityService.IInteractiveBehavior;
-// import IInteractivityService = powerbi.extensibility.utils.interactivity.IInteractivityService;
 import IInteractivityService = interactivityService.IInteractivityService;
-// import createInteractivityService = powerbi.extensibility.utils.interactivity.createInteractivityService;
 import createInteractivityService = interactivityService.createInteractivityService;
 
-// powerbi.extensibility.utils.chart
+// powerbi-visuals-utils-chartutils
 import { axis, dataLabelUtils, dataLabelInterfaces, axisInterfaces, axisScale } from "powerbi-visuals-utils-chartutils";
-// import AxisScale = powerbi.extensibility.utils.chart.axis.scale;
 import AxisScale = axisScale;
-// import createAxis = powerbi.extensibility.utils.chart.axis.createAxis;
 import createAxis = axis.createAxis;
-// import dataLabelUtils = powerbi.extensibility.utils.chart.dataLabel.utils;
-// import ILabelLayout = powerbi.extensibility.utils.chart.dataLabel.ILabelLayout;
-import ILabelLayout = dataLabelInterfaces.ILabelLayout
-// import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
+import ILabelLayout = dataLabelInterfaces.ILabelLayout;
 import IAxisProperties = axisInterfaces.IAxisProperties;
-// import LabelTextProperties = powerbi.extensibility.utils.chart.dataLabel.utils.LabelTextProperties;
 import LabelTextProperties = dataLabelUtils.LabelTextProperties;
 
-// powerbi.extensibility.utils.svg
+// powerbi-visuals-utils-svgutils
 import { IMargin, shapesInterfaces, CssConstants, manipulation } from "powerbi-visuals-utils-svgutils";
-// import IMargin = powerbi.extensibility.utils.svg.IMargin;
-// import ISize = powerbi.extensibility.utils.svg.shapes.ISize;
 import ISize = shapesInterfaces.ISize;
-// import translate = powerbi.extensibility.utils.svg.translate;
 import translate = manipulation.translate;
-// import translateAndRotate = powerbi.extensibility.utils.svg.translateAndRotate;
 import translateAndRotate = manipulation.translateAndRotate;
-// import ClassAndSelector = powerbi.extensibility.utils.svg.CssConstants.ClassAndSelector;
 import ClassAndSelector = CssConstants.ClassAndSelector;
-// import createClassAndSelector = powerbi.extensibility.utils.svg.CssConstants.createClassAndSelector;
 import createClassAndSelector = CssConstants.createClassAndSelector;
 
-// powerbi.extensibility.utils.tooltip
+// powerbi-visuals-utils-tooltiputils
 import { TooltipEventArgs, ITooltipServiceWrapper, createTooltipServiceWrapper } from "powerbi-visuals-utils-tooltiputils";
-// import TooltipEventArgs = powerbi.extensibility.utils.tooltip.TooltipEventArgs;
-// import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
-// import createTooltipServiceWrapper = powerbi.extensibility.utils.tooltip.createTooltipServiceWrapper;
 
-// powerbi.extensibility.utils.colorutils
+// powerbi-visuals-utils-colorutils
 import { ColorHelper } from "powerbi-visuals-utils-colorutils";
-// import ColorHelper = powerbi.extensibility.utils.color.ColorHelper;
 
 const ValueText = "Visual_Value";
 
@@ -242,11 +206,11 @@ export class DotPlot implements IVisual {
         return this.data && this.data.settings;
     }
 
-    private divContainer: Selection<any>; // Selection<any, any, any, any>; // REVIEW
-    private svg: Selection<any>; // Selection<any, any, any, any>; // REVIEW 
-    private xAxisSelection: Selection<any>; // Selection<any, any, any, any>; // REVIEW
-    private dotPlot: Selection<any>; // Selection<any, any, any, any>; // REVIEW
-    private clearCatcher: Selection<any>; // Selection<any, any, any, any>; // REVIEW
+    private divContainer: Selection<any>;
+    private svg: Selection<any>;
+    private xAxisSelection: Selection<any>;
+    private dotPlot: Selection<any>;
+    private clearCatcher: Selection<any>;
     private behavior: IInteractiveBehavior;
 
     private colorPalette: IColorPalette;
@@ -375,7 +339,7 @@ export class DotPlot implements IVisual {
                 - radius * DotPlot.RadiusFactor - labelFontSize - layout.margin.top - maxLabelHeight,
             maxDots: number = Math.floor(dotsTotalHeight / diameter);
 
-        const yScale: LinearScale<number, number> = d3.scale.linear()
+        const yScale: LinearScale<number, number> = d3.scaleLinear()
             .domain([DotPlot.MinAmountOfDots, maxDots])
             .range([dotsTotalHeight, DotPlot.MinAmountOfDots]);
 
@@ -383,7 +347,7 @@ export class DotPlot implements IVisual {
             minDots = minValue / (maxValue / maxDots),
             additionalValue = minValue <= 1 ? -minValue + 1 : 0; // negative values scales incorrect
 
-        const dotScale: LogScale<number, number> = d3.scale.log()
+        const dotScale: LogScale<number, number> = d3.scaleLog()
             .domain(DotPlot.getDomain(minValue + additionalValue, maxValue + additionalValue))
             .range(DotPlot.getDomain(minDots > maxDots ? 1 : minDots, maxDots))
             .clamp(true);
@@ -486,7 +450,7 @@ export class DotPlot implements IVisual {
         this.colorHelper = new ColorHelper(this.colorPalette);
 
         this.layout = new VisualLayout(null, DotPlot.Margin);
-        
+
         this.divContainer = d3.select(options.element)
             .append("div")
             .classed(DotPlot.ScrollableContainerSelector.className, true);
@@ -511,15 +475,14 @@ export class DotPlot implements IVisual {
     }
 
     public update(options: VisualUpdateOptions): void {
-        console.warn("DBG update");
         if (!options) {
             return;
         }
-        
+
         const dataView: DataView = options.dataViews && options.dataViews[0]
             ? options.dataViews[0]
             : null;
-        
+
         this.layout.viewportIn.height = this.layout.viewportIn.height;
         this.layout.viewport = options.viewport;
 
@@ -548,15 +511,13 @@ export class DotPlot implements IVisual {
                 + this.data.maxLabelWidth)
         };
 
-        this.svg.style({
-            height: PixelConverter.toString(this.dataViewport.height),
-            width: PixelConverter.toString(this.dataViewport.width)
-        });
+        this.svg
+            .style("height", PixelConverter.toString(this.dataViewport.height))
+            .style("width", PixelConverter.toString(this.dataViewport.width));
 
-        this.divContainer.style({
-            width: PixelConverter.toString(this.layout.viewport.width),
-            height: PixelConverter.toString(this.layout.viewport.height)
-        });
+        this.divContainer
+            .style("width", PixelConverter.toString(this.layout.viewport.width))
+            .style("height", PixelConverter.toString(this.layout.viewport.height));
 
         if (this.interactivityService) {
             this.interactivityService.applySelectionStateToData(this.data.dataGroups);
@@ -571,7 +532,7 @@ export class DotPlot implements IVisual {
         if (this.settings.labels.show) {
             const layout: ILabelLayout = this.getDotPlotLabelsLayout();
 
-            const labels: UpdateSelection<DotPlotDataGroup> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
+            const labels: Selection<DotPlotDataGroup> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
                 this.data.dataGroups,
                 this.svg,
                 layout,
@@ -612,29 +573,27 @@ export class DotPlot implements IVisual {
     }
 
     private drawDotPlot(): void {
-        console.warn('DBG DRAW');
-        const dotGroupSelection: UpdateSelection<DotPlotDataGroup> = this.dotPlot
+        const hasSelection: boolean = this.interactivityService
+        && this.interactivityService.hasSelection();
+
+        let dotGroupSelection: Selection<DotPlotDataGroup> = this.dotPlot
             .selectAll(DotPlot.PlotGroupSelector.selectorName)
             .data(this.data.dataGroups);
 
-        const hasSelection: boolean = this.interactivityService
-            && this.interactivityService.hasSelection();
-
-        dotGroupSelection
+        let newDotGroupSelection: Selection<DotPlotDataGroup> = dotGroupSelection
             .enter()
             .append("g")
             .classed(DotPlot.PlotGroupSelector.className, true);
 
         dotGroupSelection
-            .attr({
-                "transform": (dataPoint: DotPlotDataGroup) => {
-                    return translate(
-                        this.getXDotPositionByIndex(dataPoint.index),
-                        this.layout.margin.top + this.data.labelFontSize + this.data.maxLabelHeight);
-                },
-                "stroke": (dataPoint: DotPlotDataGroup) => this.colorHelper.isHighContrast ? dataPoint.color : DotPlot.DotGroupStrokeColor,
-                "stroke-width": this.strokeWidth
-            })
+            .merge(newDotGroupSelection)
+            .attr("transform", (dataPoint: DotPlotDataGroup) => {
+                return translate(
+                    this.getXDotPositionByIndex(dataPoint.index),
+                    this.layout.margin.top + this.data.labelFontSize + this.data.maxLabelHeight);
+                })
+            .attr("stroke", (dataPoint: DotPlotDataGroup) => this.colorHelper.isHighContrast ? dataPoint.color : DotPlot.DotGroupStrokeColor)
+            .attr("stroke-width", this.strokeWidth)
             .style("fill-opacity", (item: DotPlotDataGroup) => {
                 return getOpacity(
                     item.selected,
@@ -643,22 +602,21 @@ export class DotPlot implements IVisual {
                     false);
             });
 
-        const circleSelection: UpdateSelection<DotPlotDataPoint> = dotGroupSelection
+        let circleSelection: Selection<DotPlotDataPoint> = dotGroupSelection
+            .merge(newDotGroupSelection)
             .selectAll(DotPlot.CircleSelector.selectorName)
-            .data((dataPoint: DotPlotDataGroup) => {
-                return dataPoint.dataPoints;
-            });
+            .data((dataPoint: DotPlotDataGroup) => dataPoint.dataPoints);
 
-        circleSelection
+        let newCircleSelection: Selection<DotPlotDataPoint> = circleSelection
             .enter()
             .append("circle")
             .classed(DotPlot.CircleSelector.className, true);
 
-        circleSelection.attr({
-            cy: (dataPoint: DotPlotDataPoint) => dataPoint.y,
-            r: this.data.settings.dataPoint.radius,
-            fill: this.colorHelper.isHighContrast ? this.colorHelper.getThemeColor() : this.settings.dataPoint.fill
-        });
+        circleSelection
+            .merge(newCircleSelection)
+            .attr("cy", (dataPoint: DotPlotDataPoint) => dataPoint.y)
+            .attr("r", this.data.settings.dataPoint.radius)
+            .attr("fill", this.colorHelper.isHighContrast ? this.colorHelper.getThemeColor() : this.settings.dataPoint.fill);
 
         this.renderTooltip(dotGroupSelection);
 
@@ -733,7 +691,6 @@ export class DotPlot implements IVisual {
     }
 
     private clear(): void {
-        console.warn('DBG CLEAR');
         this.dotPlot
             .selectAll("*")
             .remove();
@@ -744,14 +701,12 @@ export class DotPlot implements IVisual {
 
         dataLabelUtils.cleanDataLabels(this.svg);
 
-        this.svg.style({
-            height: PixelConverter.toString(VisualLayout.MinViewportSize),
-            width: PixelConverter.toString(VisualLayout.MinViewportSize)
-        });
+        this.svg
+            .style("height", PixelConverter.toString(VisualLayout.MinViewportSize))
+            .style("width", PixelConverter.toString(VisualLayout.MinViewportSize));
     }
 
-    private renderTooltip(selection: UpdateSelection<DotPlotDataGroup>): void {
-        console.warn('DBG renderTooltip', selection);
+    private renderTooltip(selection: Selection<DotPlotDataGroup>): void {
         this.tooltipServiceWrapper.addTooltip(
             selection,
             (tooltipEvent: TooltipEventArgs<DotPlotDataGroup>) => {
@@ -760,7 +715,6 @@ export class DotPlot implements IVisual {
     }
 
     private calculateAxes(): void {
-        console.warn('DBG calculateAxes');
         const pixelSpan: number = this.dataViewport.width - this.data.maxLabelWidth;
 
         const xAxisProperties: IAxisProperties = createAxis({
@@ -803,14 +757,13 @@ export class DotPlot implements IVisual {
             : pixelSpan) - DotPlot.TickWidthOffset;
 
         xAxisProperties.axis.tickFormat((index: number) => {
-            // REVIEW textMeasurementService.getTailoredTextOrDefault
             if (!this.settings.categoryAxis.show || !this.data.dataGroups[index]) {
                 return DotPlot.DefaultTickValue;
             }
 
             const textProperties: TextProperties = DotPlot.getCategoryTextProperties(
                 this.data.dataGroups[index].category.value);
-            
+
             return textMeasurementService.getTailoredTextOrDefault(
                 textProperties,
                 tickWidth
@@ -826,7 +779,6 @@ export class DotPlot implements IVisual {
     }
 
     private renderAxis(duration: number): void {
-        console.warn('DBG renderAxis')
         const height: number = this.dataViewport.height - this.data.maxXAxisHeight;
 
         this.xAxisSelection.attr(
@@ -835,7 +787,7 @@ export class DotPlot implements IVisual {
                 this.data.maxLabelWidth / DotPlot.MiddleLabelWidth,
                 height));
 
-        const xAxis: Axis = this.xAxisProperties.axis.orient("bottom");
+        const xAxis: Axis<any> =  this.xAxisProperties.axis.tickFormat(function(d) { return d.x; });
 
         this.xAxisSelection
             .transition()
@@ -875,16 +827,14 @@ export class DotPlot implements IVisual {
                 .append("text")
                 .text(this.data.categoryAxisName)
 
-                .style({
-                    "text-anchor": DotPlot.TextAnchor,
-                    "fill": this.settings.categoryAxis.labelColor
-                })
-                .attr({
-                    "class": DotPlot.XAxisLabelSelector.className,
-                    "transform": translate(
+                .style("text-anchor", DotPlot.TextAnchor)
+                .style("fill", this.settings.categoryAxis.labelColor)
+
+                .attr("class", DotPlot.XAxisLabelSelector.className)
+                .attr("transform", translate(
                         this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
-                        this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset)
-                });
+                        this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset
+                ));
         }
     }
 }
