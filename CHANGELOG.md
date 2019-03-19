@@ -1,3 +1,7 @@
+## 2.0.0
+* Migrated to WebPack and D3 v5
+* Updated packages
+
 ## 1.6.0
 * API 2.1.0
 

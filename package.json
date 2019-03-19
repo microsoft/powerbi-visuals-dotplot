@@ -1,6 +1,6 @@
 {
   "name": "powerbi-visuals-dotplot",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "A dot plot is used to show a representation of the distribution of frequencies. It is most often used to show counts of an occurrence.",
   "repository": {
     "type": "git",
@@ -33,22 +33,26 @@
     "@types/jasmine": "2.8.9",
     "@types/jasmine-jquery": "1.5.32",
     "@types/jquery": "3.3.22",
+    "@types/karma": "^3.0.2",
     "@types/lodash": "4.14.117",
     "@types/webpack": "4.4.17",
     "coveralls": "2.13.1",
     "d3": "^5.4.0",
     "jasmine": "2.6.0",
     "jasmine-jquery": "2.1.1",
-    "karma": "2.0.4",
+    "karma": "^3.1.4",
     "karma-chrome-launcher": "2.2.0",
     "karma-coverage": "1.1.2",
+    "karma-coverage-istanbul-reporter": "^2.0.5",
     "karma-jasmine": "1.1.2",
-    "karma-remap-istanbul": "0.6.0",
+    "karma-remap-istanbul": "^0.6.0",
     "karma-sourcemap-loader": "0.3.7",
+    "karma-typescript": "^4.0.0",
     "karma-typescript-preprocessor": "0.3.1",
+    "karma-webpack": "^3.0.5",
     "lodash": "4.17.4",
     "powerbi-models": "1.0.12",
-    "powerbi-visuals-api": "^2.3.2",
+    "powerbi-visuals-api": "^2.3.0",
     "powerbi-visuals-tools": "^3.0.12",
     "powerbi-visuals-utils-chartutils": "2.1.0",
     "powerbi-visuals-utils-colorutils": "2.1.0",
@@ -56,14 +60,13 @@
     "powerbi-visuals-utils-formattingutils": "4.1.0",
     "powerbi-visuals-utils-interactivityutils": "^5.1.0",
     "powerbi-visuals-utils-svgutils": "2.1.0",
+    "powerbi-visuals-utils-testutils": "^2.1.7",
     "powerbi-visuals-utils-tooltiputils": "2.1.3",
     "powerbi-visuals-utils-typeutils": "2.1.0",
-    "puppeteer": "^1.5.0",
-    "tslint": "5.4.3",
-    "tslint-microsoft-contrib": "^5.0.1"
-  },
-  "dependencies": {
-    "install": "^0.12.2",
-    "npm": "^6.9.0"
+    "puppeteer": "^1.6.1",
+    "ts-node": "^8.0.3",
+    "tslint": "^5.4.3",
+    "tslint-microsoft-contrib": "^5.0.1",
+    "typescript": "^3.3.3333"
   }
 }

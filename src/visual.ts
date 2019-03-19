@@ -111,7 +111,6 @@ export class DotPlot implements IVisual {
     public layout: VisualLayout;
     public name: string;
     public title: string;
-    public type: string;
 
     private static MinOpacity: number = 0;
     private static MaxOpacity: number = 1;
@@ -573,12 +572,12 @@ export class DotPlot implements IVisual {
     }
 
     private drawDotPlot(): void {
-        const hasSelection: boolean = this.interactivityService
-        && this.interactivityService.hasSelection();
-
         let dotGroupSelection: Selection<DotPlotDataGroup> = this.dotPlot
             .selectAll(DotPlot.PlotGroupSelector.selectorName)
             .data(this.data.dataGroups);
+
+            const hasSelection: boolean = this.interactivityService
+            && this.interactivityService.hasSelection();
 
         let newDotGroupSelection: Selection<DotPlotDataGroup> = dotGroupSelection
             .enter()
@@ -632,7 +631,7 @@ export class DotPlot implements IVisual {
             this.interactivityService.applySelectionStateToData(this.data.dataGroups);
 
             const behaviorOptions: DotplotBehaviorOptions = {
-                columns: dotGroupSelection,
+                columns: dotGroupSelection.merge(newDotGroupSelection),
                 clearCatcher: this.clearCatcher,
                 interactivityService: this.interactivityService,
                 isHighContrastMode: this.colorHelper.isHighContrast
@@ -790,8 +789,6 @@ export class DotPlot implements IVisual {
         const xAxis: Axis<any> =  this.xAxisProperties.axis.tickFormat(function(d) { return d.x; });
 
         this.xAxisSelection
-            .transition()
-            .duration(duration)
             .call(xAxis)
             .selectAll(`g${DotPlot.TickTextSelector.selectorName}`)
             .style("fill", this.settings.categoryAxis.labelColor);
@@ -803,12 +800,20 @@ export class DotPlot implements IVisual {
                 .style("stroke", this.settings.categoryAxis.labelColor);
         }
 
-        this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
-            .append("title")
-            .text((index: number) => {
-                return this.data.dataGroups[index]
-                    && this.data.dataGroups[index].category.value;
-            });
+        if (this.settings.categoryAxis.show) {
+            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
+                .text((index: number) => {
+                    return this.data.dataGroups[index]
+                        && this.data.dataGroups[index].category.value;
+                });
+        } else {
+            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
+                .append("title")
+                .text((index: number) => {
+                    return this.data.dataGroups[index]
+                        && this.data.dataGroups[index].category.value;
+                });
+        }
 
         this.xAxisSelection
             .selectAll("line")

@@ -24,58 +24,56 @@
  *  THE SOFTWARE.
  */
 
-/// <reference path="_references.ts" />
+// <reference path="_references.ts" />
+import powerbi from "powerbi-visuals-api";
 
-module powerbi.extensibility.visual.test {
-    // powerbi.extensibility.utils.test
-    import VisualBuilderBase = powerbi.extensibility.utils.test.VisualBuilderBase;
+import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
+import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 
-    // DotPlot1442374105856
-    import VisualClass = powerbi.extensibility.visual.DotPlot1442374105856.DotPlot;
+import { DotPlot as VisualClass } from "../src/visual";
 
-    export class DotPlotBuilder extends VisualBuilderBase<VisualClass> {
-        constructor(width: number, height: number) {
-            super(width, height, "DotPlot1442374105856");
-        }
+export class DotPlotBuilder extends VisualBuilderBase<VisualClass> {
+    constructor(width: number, height: number) {
+        super(width, height, "DotPlot1442374105856");
+    }
 
-        protected build(options: VisualConstructorOptions) {
-            return new VisualClass(options);
-        }
+    protected build(options: VisualConstructorOptions) {
+        return new VisualClass(options);
+    }
 
-        public get mainElement() {
-            return this.element.find("svg.dotplot");
-        }
+    public get mainElement() {
+        return this.element.find("svg.dotplot");
+    }
 
-        public get dataLabels() {
-            return this.mainElement
-                .children("g.labels")
-                .children("text.data-labels");
-        }
+    public get dataLabels() {
+        return this.mainElement
+            .children("g.labels")
+            .children("text.data-labels");
+    }
 
-        public get axisGraphicsContext() {
-            return this.mainElement.children("g.axisGraphicsContext");
-        }
+    public get axisGraphicsContext() {
+        return this.mainElement.children("g.axisGraphicsContext");
+    }
 
-        public get xAxis() {
-            return this.axisGraphicsContext.children("g.x.axis");
-        }
+    public get xAxis() {
+        return this.axisGraphicsContext.children("g.x.axis");
+    }
 
-        public get xAxisLabel() {
-            return this.xAxis.children("text.xAxisLabel");
-        }
+    public get xAxisLabel() {
+        return this.xAxis.children("text.xAxisLabel");
+    }
 
-        public get dotGroups() {
-            return this.mainElement
-                .children("g.dotplotSelector")
-                .children("g.dotplotGroup");
-        }
+    public get dotGroups() {
+        return this.mainElement
+            .children("g.dotplotSelector")
+            .children("g.dotplotGroup");
+    }
 
-        public get dots() {
-            return this.dotGroups.children("circle.circleSelector");
-        }
+    public get dots() {
+        return this.dotGroups.children("circle.circleSelector");
+    }
 
-        public get xAxisTicks() {
-            return this.xAxis.children("g.tick");
-        }
+    public get xAxisTicks() {
+        return this.xAxis.children("g.tick");
     }
 }
