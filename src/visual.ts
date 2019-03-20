@@ -43,6 +43,7 @@ import { DotPlotSettings, LabelsSettings } from "./settings";
 import IViewport = powerbi.IViewport;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
+import IVisualEventService = powerbi.extensibility.IVisualEventService;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import IColorPalette = powerbi.extensibility.IColorPalette;
@@ -107,10 +108,6 @@ import { ColorHelper } from "powerbi-visuals-utils-colorutils";
 const ValueText = "Visual_Value";
 
 export class DotPlot implements IVisual {
-
-    public layout: VisualLayout;
-    public name: string;
-    public title: string;
 
     private static MinOpacity: number = 0;
     private static MaxOpacity: number = 1;
@@ -204,7 +201,11 @@ export class DotPlot implements IVisual {
     private get settings() {
         return this.data && this.data.settings;
     }
+    public layout: VisualLayout;
+    public name: string;
+    public title: string;
 
+    private events: IVisualEventService;
     private divContainer: Selection<any>;
     private svg: Selection<any>;
     private xAxisSelection: Selection<any>;
@@ -435,9 +436,11 @@ export class DotPlot implements IVisual {
     }
 
     private init(options: VisualConstructorOptions): void {
+        this.events = options.host.eventService;
+
         this.behavior = new DotplotBehavior();
 
-        this.visualHost = options.host;
+        this.visualHost = options.host as IVisualHost;
 
         this.tooltipServiceWrapper = createTooltipServiceWrapper(
             this.visualHost.tooltipService,
@@ -478,88 +481,97 @@ export class DotPlot implements IVisual {
             return;
         }
 
-        const dataView: DataView = options.dataViews && options.dataViews[0]
-            ? options.dataViews[0]
-            : null;
+        try {
+            this.events.renderingStarted(options);
 
-        this.layout.viewportIn.height = this.layout.viewportIn.height;
-        this.layout.viewport = options.viewport;
+            const dataView: DataView = options.dataViews && options.dataViews[0]
+                ? options.dataViews[0]
+                : null;
 
-        const data: DotPlotData = DotPlot.converter(
-            dataView,
-            this.layout.viewportIn.height,
-            this.colorPalette,
-            this.colorHelper,
-            this.visualHost,
-            this.layout
-        );
+            this.layout.viewportIn.height = this.layout.viewportIn.height;
+            this.layout.viewport = options.viewport;
 
-        if (!data) {
-            this.clear();
-            return;
-        }
+            const data: DotPlotData = DotPlot.converter(
+                dataView,
+                this.layout.viewportIn.height,
+                this.colorPalette,
+                this.colorHelper,
+                this.visualHost,
+                this.layout
+            );
 
-        this.data = data;
-
-        this.dataViewport = {
-            height: this.layout.viewportIn.height,
-            width: Math.max(
-                this.layout.viewportIn.width,
-                this.data.dataGroups.length
-                * (this.data.settings.dataPoint.radius * DotPlot.RadiusFactor + DotPlot.ExtraDiameterOfDataGroups)
-                + this.data.maxLabelWidth)
-        };
-
-        this.svg
-            .style("height", PixelConverter.toString(this.dataViewport.height))
-            .style("width", PixelConverter.toString(this.dataViewport.width));
-
-        this.divContainer
-            .style("width", PixelConverter.toString(this.layout.viewport.width))
-            .style("height", PixelConverter.toString(this.layout.viewport.height));
-
-        if (this.interactivityService) {
-            this.interactivityService.applySelectionStateToData(this.data.dataGroups);
-        }
-
-        this.calculateAxes();
-
-        this.renderAxis(this.durationAnimations);
-
-        this.drawDotPlot();
-
-        if (this.settings.labels.show) {
-            const layout: ILabelLayout = this.getDotPlotLabelsLayout();
-
-            const labels: Selection<DotPlotDataGroup> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
-                this.data.dataGroups,
-                this.svg,
-                layout,
-                this.dataViewport,
-                false,
-                this.durationAnimations);
-
-            if (labels) {
-                labels.attr("transform", (dataGroup: DotPlotDataGroup) => {
-                    const size: ISize = dataGroup.size;
-                    if (data.settings.labels.orientation === DotPlotLabelsOrientation.Vertical) {
-                        const px: number = dataGroup.anchorPoint.x,
-                            py: number = dataGroup.anchorPoint.y,
-                            dx: number = size.width / DotPlot.DataLabelXOffset
-                                + size.height * DotPlot.DataLabelXOffsetIndex,
-                            dy: number = size.height + size.height / DotPlot.DataLabelYOffset;
-                        return translateAndRotate(dx, -dy + this.data.maxLabelHeight - (DotPlot.MaxLabelWidth >= this.data.maxLabelHeight ? 0 : this.data.maxLabelHeight * DotPlot.verticalLabelMarginRatio), px, py, DotPlot.DataLabelAngle);
-                    } else {
-                        const dx: number = size.width / DotPlot.DataLabelXOffset,
-                            dy: number = size.height / DotPlot.DataLabelYOffset;
-
-                        return translate(dx, dy);
-                    }
-                });
+            if (!data) {
+                this.clear();
+                return;
             }
-        }
-        else {
-            dataLabelUtils.cleanDataLabels(this.svg);
+
+            this.data = data;
+
+            this.dataViewport = {
+                height: this.layout.viewportIn.height,
+                width: Math.max(
+                    this.layout.viewportIn.width,
+                    this.data.dataGroups.length
+                    * (this.data.settings.dataPoint.radius * DotPlot.RadiusFactor + DotPlot.ExtraDiameterOfDataGroups)
+                    + this.data.maxLabelWidth)
+            };
+
+            this.svg
+                .style("height", PixelConverter.toString(this.dataViewport.height))
+                .style("width", PixelConverter.toString(this.dataViewport.width));
+
+            this.divContainer
+                .style("width", PixelConverter.toString(this.layout.viewport.width))
+                .style("height", PixelConverter.toString(this.layout.viewport.height));
+
+            if (this.interactivityService) {
+                this.interactivityService.applySelectionStateToData(this.data.dataGroups);
+            }
+
+            this.calculateAxes();
+
+            this.renderAxis(this.durationAnimations);
+
+            this.drawDotPlot();
+
+            if (this.settings.labels.show) {
+                const layout: ILabelLayout = this.getDotPlotLabelsLayout();
+
+                const labels: Selection<DotPlotDataGroup> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
+                    this.data.dataGroups,
+                    this.svg,
+                    layout,
+                    this.dataViewport,
+                    false,
+                    this.durationAnimations);
+
+                if (labels) {
+                    labels.attr("transform", (dataGroup: DotPlotDataGroup) => {
+                        const size: ISize = dataGroup.size;
+                        if (data.settings.labels.orientation === DotPlotLabelsOrientation.Vertical) {
+                            const px: number = dataGroup.anchorPoint.x,
+                                py: number = dataGroup.anchorPoint.y,
+                                dx: number = size.width / DotPlot.DataLabelXOffset
+                                    + size.height * DotPlot.DataLabelXOffsetIndex,
+                                dy: number = size.height + size.height / DotPlot.DataLabelYOffset;
+                            return translateAndRotate(dx, -dy + this.data.maxLabelHeight - (DotPlot.MaxLabelWidth >= this.data.maxLabelHeight ? 0 : this.data.maxLabelHeight * DotPlot.verticalLabelMarginRatio), px, py, DotPlot.DataLabelAngle);
+                        } else {
+                            const dx: number = size.width / DotPlot.DataLabelXOffset,
+                                dy: number = size.height / DotPlot.DataLabelYOffset;
+
+                            return translate(dx, dy);
+                        }
+                    });
+                }
+            }
+            else {
+                dataLabelUtils.cleanDataLabels(this.svg);
+            }
+
+            this.events.renderingFinished(options);
+        } catch (e) {
+            console.error(e);
+            this.events.renderingFailed(options);
         }
     }
 
