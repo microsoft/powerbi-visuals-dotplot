@@ -33,7 +33,7 @@ const webpackConfig = require("./test.webpack.config.js");
 const tsconfig = require("./test.tsconfig.json");
 
 const recursivePathToTests = "test/**/*.ts";
-const srcRecursivePath = "test/visualTest.ts";
+const testRecursivePath = "test/visualTest.ts";
 const srcCssRecursivePath = ".tmp/drop/visual.css";
 const srcOriginalRecursivePath = "src/**/*.ts";
 const coverageFolder = "coverage";
@@ -43,7 +43,7 @@ process.env.CHROME_BIN = require("puppeteer").executablePath();
 module.exports = (config) => {
     config.set({
         browserNoActivityTimeout: 100000,
-        browsers: ["Chrome"],
+        browsers: ["ChromeHeadless"],
         colors: true,
         frameworks: ["jasmine"],
         reporters: [
@@ -54,7 +54,7 @@ module.exports = (config) => {
         singleRun: true,
         files: [
             srcCssRecursivePath,
-            srcRecursivePath,
+            testRecursivePath,
             "node_modules/jquery/dist/jquery.min.js",
             "node_modules/jasmine-jquery/lib/jasmine-jquery.js",
             {
@@ -70,8 +70,7 @@ module.exports = (config) => {
             }
         ],
         preprocessors: {
-            [recursivePathToTests]: ["typescript"],
-            [srcRecursivePath]: ["webpack", "sourcemap", "coverage"]
+            [testRecursivePath]: ["webpack"]
         },
         typescriptPreprocessor: {
             options: tsconfig.compilerOptions,
