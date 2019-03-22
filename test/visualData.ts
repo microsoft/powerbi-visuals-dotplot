@@ -24,67 +24,65 @@
  *  THE SOFTWARE.
  */
 
-/// <reference path="_references.ts"/>
+// <reference path="_references.ts"/>
+import powerbi from "powerbi-visuals-api";
 
-module powerbi.extensibility.visual.test {
-    // powerbi.extensibility.utils.type
-    import ValueType = powerbi.extensibility.utils.type.ValueType;
+import { valueType as vt, pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
+import ValueType = vt.ValueType;
 
-    // powerbi.extensibility.utils.test
-    import getRandomNumbers = powerbi.extensibility.utils.test.helpers.getRandomNumbers;
-    import TestDataViewBuilder = powerbi.extensibility.utils.test.dataViewBuilder.TestDataViewBuilder;
+import { getRandomNumbers, testDataViewBuilder } from "powerbi-visuals-utils-testutils";
+import TestDataViewBuilder = testDataViewBuilder.TestDataViewBuilder;
 
-    export class DotPlotData extends TestDataViewBuilder {
-        public static ColumnCategory: string = "Name";
-        public static ColumnValues: string = "Value";
+export class DotPlotData extends TestDataViewBuilder {
+    public static ColumnCategory: string = "Name";
+    public static ColumnValues: string = "Value";
 
-        public static ValuesCategoryLongNames: string[] = [
-            "Sir Demetrius",
-            "Sir Montgomery",
-            "Sir Remington",
-            "Sir Forrester",
-            "Sir Christopher",
-            "Miss Annabelle",
-            "Miss Emmaline"
-        ];
+    public static ValuesCategoryLongNames: string[] = [
+        "Sir Demetrius",
+        "Sir Montgomery",
+        "Sir Remington",
+        "Sir Forrester",
+        "Sir Christopher",
+        "Miss Annabelle",
+        "Miss Emmaline"
+    ];
 
-        public valuesCategory: string[] = [
-            "William",
-            "Olivia",
-            "James",
-            "Lucas",
-            "Henry",
-            "Aiden",
-            "Daniel",
-            "Harper",
-            "Logan",
-            "Ella",
-        ];
+    public valuesCategory: string[] = [
+        "William",
+        "Olivia",
+        "James",
+        "Lucas",
+        "Henry",
+        "Aiden",
+        "Daniel",
+        "Harper",
+        "Logan",
+        "Ella",
+    ];
 
-        public valuesValue: number[] = getRandomNumbers(this.valuesCategory.length, 10, 100);
+    public valuesValue: number[] = getRandomNumbers(this.valuesCategory.length, 10, 100);
 
-        public getDataView(columnNames?: string[]): powerbi.DataView {
-            return this.createCategoricalDataViewBuilder([
+    public getDataView(columnNames?: string[]): powerbi.DataView {
+        return this.createCategoricalDataViewBuilder([
+            {
+                source: {
+                    displayName: DotPlotData.ColumnCategory,
+                    roles: { Category: true },
+                    type: ValueType.fromDescriptor({ text: true })
+                },
+                values: this.valuesCategory
+            }
+        ], [
                 {
                     source: {
-                        displayName: DotPlotData.ColumnCategory,
-                        roles: { Category: true },
-                        type: ValueType.fromDescriptor({ text: true })
+                        displayName: DotPlotData.ColumnValues,
+                        isMeasure: true,
+                        roles: { Value: true },
+                        type: ValueType.fromDescriptor({ numeric: true }),
                     },
-                    values: this.valuesCategory
+                    values: this.valuesValue
                 }
-            ], [
-                    {
-                        source: {
-                            displayName: DotPlotData.ColumnValues,
-                            isMeasure: true,
-                            roles: { Value: true },
-                            type: ValueType.fromDescriptor({ numeric: true }),
-                        },
-                        values: this.valuesValue
-                    }
-                ],
-                columnNames).build();
-        }
+            ],
+            columnNames).build();
     }
 }

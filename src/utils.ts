@@ -24,20 +24,18 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual {
-    export const DimmedOpacity: number = 0.4,
-        DefaultOpacity: number = 1.0;
+export const DimmedOpacity: number = 0.4,
+    DefaultOpacity: number = 1.0;
 
-    export function getOpacity(
-        selected: boolean,
-        highlight: boolean,
-        hasSelection: boolean,
-        hasPartialHighlights: boolean): number {
+export function getOpacity(
+    selected: boolean,
+    highlight: boolean,
+    hasSelection: boolean,
+    hasPartialHighlights: boolean): number {
 
-        if ((hasPartialHighlights && !highlight) || (hasSelection && !selected)) {
-            return DimmedOpacity;
-        }
-
-        return DefaultOpacity;
+    if ((hasPartialHighlights && !highlight) || (hasSelection && !selected)) {
+        return DimmedOpacity;
     }
+
+    return DefaultOpacity;
 }

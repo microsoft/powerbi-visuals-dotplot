@@ -24,66 +24,71 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual {
-    // d3
-    import Selection = d3.Selection;
+import * as d3 from "d3";
 
-    // powerbi.extensibility.utils.interactivity
-    import ISelectionHandler = powerbi.extensibility.utils.interactivity.ISelectionHandler;
-    import IInteractiveBehavior = powerbi.extensibility.utils.interactivity.IInteractiveBehavior;
-    import IInteractivityService = powerbi.extensibility.utils.interactivity.IInteractivityService;
+import { getOpacity } from "./utils";
+import { DotPlotDataGroup } from "./dataInterfaces";
 
-    export interface DotplotBehaviorOptions {
-        columns: Selection<DotPlotDataGroup>;
-        clearCatcher: Selection<any>;
-        interactivityService: IInteractivityService;
-        isHighContrastMode: boolean;
+// d3
+import { Selection } from "d3-selection";
+
+import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
+import ISelectionHandler = interactivityService.ISelectionHandler;
+import IInteractiveBehavior = interactivityService.IInteractiveBehavior;
+import IInteractivityService = interactivityService.IInteractivityService;
+
+export interface DotplotBehaviorOptions {
+    columns: Selection<any, DotPlotDataGroup, any, any>;
+    clearCatcher: Selection<any, any, any, any>;
+    interactivityService: IInteractivityService;
+    isHighContrastMode: boolean;
+}
+
+export class DotplotBehavior implements IInteractiveBehavior {
+    private columns: Selection<any, DotPlotDataGroup, any, any>;
+
+    private clearCatcher: Selection<any, any, any, any>;
+    private interactivityService: IInteractivityService;
+    private isHighContrastMode: boolean;
+
+    public bindEvents(
+        options: DotplotBehaviorOptions,
+        selectionHandler: ISelectionHandler): void {
+
+        this.columns = options.columns;
+        this.clearCatcher = options.clearCatcher;
+        this.interactivityService = options.interactivityService;
+        this.isHighContrastMode = options.isHighContrastMode;
+
+        this.columns.on("click", (dataPoint: DotPlotDataGroup) => {
+            selectionHandler.handleSelection(
+                dataPoint,
+                (d3.event as MouseEvent).ctrlKey
+            );
+        });
+
+        this.clearCatcher.on("click", () => {
+            selectionHandler.handleClearSelection();
+        });
     }
 
-    export class DotplotBehavior implements IInteractiveBehavior {
-        private columns: Selection<DotPlotDataGroup>;
-        private clearCatcher: Selection<any>;
-        private interactivityService: IInteractivityService;
-        private isHighContrastMode: boolean;
+    public renderSelection(hasSelection: boolean): void {
+        const hasHighlights: boolean = this.interactivityService.hasSelection();
 
-        public bindEvents(
-            options: DotplotBehaviorOptions,
-            selectionHandler: ISelectionHandler): void {
+        this.changeAttributeOpacity("fill-opacity", hasSelection, hasHighlights);
 
-            this.columns = options.columns;
-            this.clearCatcher = options.clearCatcher;
-            this.interactivityService = options.interactivityService;
-            this.isHighContrastMode = options.isHighContrastMode;
-
-            this.columns.on("click", (dataPoint: DotPlotDataGroup) => {
-                selectionHandler.handleSelection(
-                    dataPoint,
-                    (d3.event as MouseEvent).ctrlKey);
-            });
-
-            this.clearCatcher.on("click", () => {
-                selectionHandler.handleClearSelection();
-            });
+        if (this.isHighContrastMode) {
+            this.changeAttributeOpacity("stroke-opacity", hasSelection, hasHighlights);
         }
+    }
 
-        public renderSelection(hasSelection: boolean): void {
-            const hasHighlights: boolean = this.interactivityService.hasSelection();
-
-            this.changeAttributeOpacity("fill-opacity", hasSelection, hasHighlights);
-
-            if (this.isHighContrastMode) {
-                this.changeAttributeOpacity("stroke-opacity", hasSelection, hasHighlights);
-            }
-        }
-
-        private changeAttributeOpacity(attributeName: string, hasSelection: boolean, hasHighlights: boolean): void {
-            this.columns.style(attributeName, (dataPoint: DotPlotDataGroup) => {
-                return getOpacity(
-                    dataPoint.selected,
-                    dataPoint.highlight,
-                    !dataPoint.highlight && hasSelection,
-                    !dataPoint.selected && hasHighlights);
-            });
-        }
+    private changeAttributeOpacity(attributeName: string, hasSelection: boolean, hasHighlights: boolean): void {
+        this.columns.style(attributeName, (dataPoint: DotPlotDataGroup) => {
+            return getOpacity(
+                dataPoint.selected,
+                dataPoint.highlight,
+                !dataPoint.highlight && hasSelection,
+                !dataPoint.selected && hasHighlights);
+        });
     }
 }
