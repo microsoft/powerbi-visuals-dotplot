@@ -1,3 +1,6 @@
+## 2.0.1
+* Fixed bug with styles import
+
 ## 2.0.0
 * Migrated to WebPack and D3 v5
 * Updated packages

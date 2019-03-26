@@ -39,6 +39,7 @@ import { DotplotBehavior, DotplotBehaviorOptions } from "./behavior";
 import { getOpacity } from "./utils";
 import { DotPlotData, DotPlotChartCategory, DotPlotDataGroup, DotPlotDataPoint, DotPlotLabelsOrientation } from "./dataInterfaces";
 import { DotPlotSettings, LabelsSettings } from "./settings";
+import "../style/visual.less";
 
 import IViewport = powerbi.IViewport;
 import IVisual = powerbi.extensibility.visual.IVisual;
