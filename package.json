@@ -58,7 +58,7 @@
     "powerbi-visuals-utils-formattingutils": "4.1.0",
     "powerbi-visuals-utils-interactivityutils": "^5.1.0",
     "powerbi-visuals-utils-svgutils": "2.1.0",
-    "powerbi-visuals-utils-testutils": "^2.1.7",
+    "powerbi-visuals-utils-testutils": "^2.6.0",
     "powerbi-visuals-utils-tooltiputils": "2.1.3",
     "powerbi-visuals-utils-typeutils": "2.1.0",
     "puppeteer": "^1.6.1",
