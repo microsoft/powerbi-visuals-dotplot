@@ -597,6 +597,8 @@ export class DotPlot implements IVisual {
 
         dotGroupSelection
             .merge(newDotGroupSelection)
+            .attr("focusable", true)
+            .attr("tabindex", 0)
             .attr("transform", (dataPoint: DotPlotDataGroup) => {
                 return translate(
                     this.getXDotPositionByIndex(dataPoint.index),

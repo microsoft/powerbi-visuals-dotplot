@@ -126,51 +126,51 @@
                     },
                     "suppressFormatPainterCopy": true
                 },
-              "fontSize": {
-                "type": {
-                  "formatting": {
-                    "fontSize": true
-                  }
-                }
-              },
-              "fontFamily": {
-                "type": {
-                    "formatting": {
-                        "fontFamily": true
-                    }
-                }
-              },
-              "bold": {
-                "type": {
-                    "bool": true
-                }
-              },
-              "italic": {
-                "type": {
-                    "bool": true
-                }
-              },
-              "underline": {
-                "type": {
-                    "bool": true
-                }
-              },
-               "orientation": {
+                "fontSize": {
                     "type": {
-                      "enumeration": [
-                        {
-                          "value": "Horizontal",
-                          "displayName": "Horizontal",
-                          "displayNameKey": "Visual_Horizontal"
-                        },                       
-                        {
-                          "value": "Vertical",
-                          "displayName": "Vertical",
-                          "displayNameKey": "Visual_Vertical"
+                        "formatting": {
+                            "fontSize": true
                         }
-                      ]
                     }
-                  }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "orientation": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "Horizontal",
+                                "displayName": "Horizontal",
+                                "displayNameKey": "Visual_Horizontal"
+                            },
+                            {
+                                "value": "Vertical",
+                                "displayName": "Vertical",
+                                "displayNameKey": "Visual_Vertical"
+                            }
+                        ]
+                    }
+                }
             }
         }
     },
@@ -183,5 +183,6 @@
             "tooltips"
         ]
     },
+    "supportsKeyboardFocus": true,
     "privileges": []
 }

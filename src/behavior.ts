@@ -37,7 +37,7 @@ import IInteractivityService = interactivityBaseService.IInteractivityService;
 import { IBehaviorOptions } from "powerbi-visuals-utils-interactivityutils/lib/interactivityBaseService";
 
 export interface DotplotBehaviorOptions extends IBehaviorOptions<DotPlotDataGroup> {
-    columns: Selection<any, DotPlotDataGroup, any, any>;
+    columns: Selection<SVGGElement, DotPlotDataGroup, any, any>;
     clearCatcher: Selection<any, any, any, any>;
     interactivityService: IInteractivityService<DotPlotDataGroup>;
     isHighContrastMode: boolean;
@@ -59,12 +59,48 @@ export class DotplotBehavior implements IInteractiveBehavior {
         this.interactivityService = options.interactivityService;
         this.isHighContrastMode = options.isHighContrastMode;
 
+        this.bindClickEvents(selectionHandler);
+        this.bindContextMenuEvents(selectionHandler);
+        this.bindKeyboardEvents(selectionHandler);
+    }
+
+    private bindClickEvents(selectionHandler: ISelectionHandler): void {
         this.columns.on("click", (event: MouseEvent, dataPoint: DotPlotDataGroup) => {
+            event.stopPropagation();
             selectionHandler.handleSelection(dataPoint, event.ctrlKey || event.shiftKey || event.metaKey);
         });
 
         this.clearCatcher.on("click", () => {
             selectionHandler.handleClearSelection();
+        });
+    }
+
+    private bindContextMenuEvents(selectionHandler: ISelectionHandler): void {
+        this.columns.on("contextmenu", (event: MouseEvent, dataPoint: DotPlotDataGroup) => {
+            event.preventDefault();
+            event.stopPropagation();
+            selectionHandler.handleContextMenu(dataPoint, {
+                x: event.clientX,
+                y: event.clientY
+            });
+        });
+
+        this.clearCatcher.on("contextmenu", (event: MouseEvent) => {
+            event.preventDefault();
+            selectionHandler.handleContextMenu(null, {
+                x: event.clientX,
+                y: event.clientY
+            });
+        });
+    }
+
+    private bindKeyboardEvents(selectionHandler: ISelectionHandler): void {
+        this.columns.on("keydown", (event: KeyboardEvent, dataPoint: DotPlotDataGroup) => {
+            if (event.code === "Enter" || event.code === "Space") {
+                event.preventDefault();
+                event.stopPropagation();
+                selectionHandler.handleSelection(dataPoint, event.ctrlKey || event.shiftKey || event.metaKey);
+            }
         });
     }
 

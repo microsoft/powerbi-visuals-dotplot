@@ -5,6 +5,7 @@
 * Remove jquery
 * Migrate to new formatting pane
 * Add report page tooltips
+* Add keyboard navigation and context menu support
 
 ## 2.0.1
 * Fixed bug with styles import
