@@ -2,6 +2,7 @@
 * Update API to 5.11.0, tools to 5.5.1 and other packages
 * Migrate from tslint to eslint, from puppeteer to playwright-chromium
 * Split d3 into submodules
+* Remove jquery
 
 ## 2.0.1
 * Fixed bug with styles import

@@ -50,7 +50,7 @@ module.exports = (config) => {
                 flags: ["--remote-debugging-port=9333"]
             }
         },
-        singleRun: false,
+        singleRun: true,
         colors: true,
         frameworks: ["jasmine", "webpack"],
         reporters: [
@@ -60,8 +60,6 @@ module.exports = (config) => {
         files: [
             srcCssRecursivePath,
             testRecursivePath,
-            "node_modules/jquery/dist/jquery.min.js",
-            "node_modules/jasmine-jquery/lib/jasmine-jquery.js",
             {
                 pattern: "./capabilities.json",
                 watched: false,

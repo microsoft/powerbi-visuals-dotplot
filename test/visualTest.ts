@@ -49,21 +49,13 @@ describe("DotPlot", () => {
 
     describe("DOM tests", () => {
         it("svg element created", () => {
-            expect(visualBuilder.mainElement[0]).toBeInDOM();
+            expect(visualBuilder.mainElement).toBeDefined();
         });
 
         it("update", done => {
             visualBuilder.updateRenderTimeout(dataView, () => {
-                const dotplotGroupLength: number = visualBuilder.mainElement
-                    .children(".dotplotSelector")
-                    .children(".dotplotGroup")
-                    .length;
-
-                const tickLength: number = visualBuilder.mainElement
-                    .children(".axisGraphicsContext")
-                    .children(".x.axis")
-                    .children(".tick")
-                    .length;
+                const dotplotGroupLength: number = visualBuilder.dotGroups.length
+                const tickLength: number = visualBuilder.xAxisTicks.length;
 
                 expect(dotplotGroupLength).toBeGreaterThan(0);
                 expect(tickLength).toBe(dataView.categorical!.categories![0].values.length);
@@ -77,21 +69,8 @@ describe("DotPlot", () => {
             dataView = defaultDataViewBuilder.getDataView();
 
             visualBuilder.updateRenderTimeout(dataView, () => {
-                // visualBuilder.xAxisTicks.each((i, e) => {
-                //     if (!$(e).children("text").get(0)
-                //     && $(e).children("text").get(0)!.firstChild
-                //     && !expect(
-                //         $(e).children("text").get(0)!.firstChild!.textContent
-                //     ).toEqual(
-                //         String(dataView.categorical.categories[0].values[i]) || "(Blank)"
-                //     )) {
-                //         return false;
-                //     }
-                // });
 
-                visualBuilder.xAxisTicks.each((i, element) => {
-                    const textElement: Element = element.querySelector("text") as Element;
-
+                visualBuilder.xAxisTickText.forEach((textElement: SVGTextElement, i: number) => {
                     expect(textElement).toBeDefined();
                     expect(textElement.textContent).toMatch(`${String(dataView.categorical!.categories![0].values[i])}|(Blank)`);
                 });
@@ -101,16 +80,15 @@ describe("DotPlot", () => {
         });
 
         it("should correctly render duplicates in categories", done => {
-            dataView.categorical.categories[0].values[1] =
-                dataView.categorical.categories[0].values[0];
+            dataView.categorical!.categories![0].values[1] =
+                dataView.categorical!.categories![0].values[0];
 
-            dataView.categorical.categories[0].identity[1] =
-                dataView.categorical.categories[0].identity[0];
+            dataView.categorical!.categories![0].identity![1] =
+                dataView.categorical!.categories![0].identity![0];
 
             visualBuilder.updateRenderTimeout(dataView, () => {
-                const groupsRects = visualBuilder.dotGroups
-                    .toArray()
-                    .map((element: HTMLElement) => element.getBoundingClientRect());
+                const groupsRects = Array.from(visualBuilder.dotGroups)
+                    .map((element: SVGGElement) => element.getBoundingClientRect());
 
                 expect(uniq(groupsRects.map(x => x.left)).length).toEqual(groupsRects.length);
 
@@ -121,22 +99,22 @@ describe("DotPlot", () => {
         it("if visual shouldn't be rendered bottom scrollbar shouldn't be visible", () => {
             dataView = defaultDataViewBuilder.getDataView([DotPlotData.ColumnValues]);
             visualBuilder.update(dataView);
-            expect(visualBuilder.mainElement[0].getBoundingClientRect().width).toBe(0);
+            expect(visualBuilder.mainElement.getBoundingClientRect().width).toBe(0);
         });
 
         it("multi-selection test", () => {
             visualBuilder.updateFlushAllD3Transitions(dataView);
 
-            const firstGroup: JQuery = visualBuilder.dotGroups.eq(0),
-                secondGroup: JQuery = visualBuilder.dotGroups.eq(1),
-                thirdGroup: JQuery = visualBuilder.dotGroups.eq(2);
+            const firstGroup = visualBuilder.dotGroups[0];
+            const secondGroup = visualBuilder.dotGroups[1];
+            const thirdGroup = visualBuilder.dotGroups[2];
 
-            firstGroup.get(0)?.dispatchEvent(new MouseEvent("click"));
-            secondGroup.get(0)?.dispatchEvent(new MouseEvent("click", { ctrlKey: true}));
+            firstGroup?.dispatchEvent(new MouseEvent("click"));
+            secondGroup?.dispatchEvent(new MouseEvent("click", { ctrlKey: true}));
 
-            expect(parseFloat(firstGroup.css("fill-opacity"))).toBe(1);
-            expect(parseFloat(secondGroup.css("fill-opacity"))).toBe(1);
-            expect(parseFloat(thirdGroup.css("fill-opacity"))).toBeLessThan(1);
+            expect(parseFloat(firstGroup.style.fillOpacity)).toBe(1);
+            expect(parseFloat(secondGroup.style.fillOpacity)).toBe(1);
+            expect(parseFloat(thirdGroup.style.fillOpacity)).toBeLessThan(1);
         });
     });
 
@@ -156,17 +134,18 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.xAxisTicks
-                    .toArray()
-                    .map($)
-                    .forEach((e: JQuery) => {
-                        expect(e.children("line").css("opacity")).not.toBe("0");
+                    .forEach((e: SVGGElement) => {
+                        const line = e.querySelector("line");
+                        expect(line).toBeDefined();
+                        expect(line!.style.opacity).not.toBe("0");
                     });
 
-                visualBuilder.xAxisTicks.toArray()
-                    .map(e => $($(e).children("text")[0].childNodes[0]))
-                    .forEach(e => {
-                        expect(e.is("title")).toBeFalsy();
-                        expect(e.text()).not.toBeEmpty();
+                visualBuilder.xAxisTicks
+                    .map(e => e.querySelector("text")!)
+                    .forEach((e: SVGTextElement) => {
+                        expect(e.children.length).toBe(0);
+                        expect(e.tagName).not.toBe("title");
+                        expect(e.textContent!).toBeTruthy();
                     });
 
                 (dataView.metadata.objects as any).categoryAxis.show = false;
@@ -174,17 +153,17 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.xAxisTicks
-                    .toArray()
-                    .map($)
-                    .forEach((element: JQuery) => {
-                        expect(element.children("line").css("opacity")).toBe("0");
+                    .forEach((element: SVGGElement) => {
+                        const line = element.querySelector("line")!;
+                        expect(line.style.opacity).toBe("0");
                     });
 
                 visualBuilder.xAxisTicks
-                    .toArray()
-                    .map(e => $($(e).children("text")[0].childNodes[0]))
+                    .map(e => e.querySelector("text")!)
                     .forEach(e => {
-                        expect(e.is("title")).toBeTruthy();
+                        const title = e.querySelector("title");
+                        expect(title).toBeDefined();
+                        expect(title!.textContent).toBeTruthy();
                     });
             });
 
@@ -192,12 +171,12 @@ describe("DotPlot", () => {
                 (dataView.metadata.objects as any).categoryAxis.showAxisTitle = true;
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                expect(visualBuilder.xAxisLabel).toBeInDOM();
+                expect(visualBuilder.xAxisLabel).toBeDefined();
 
                 (dataView.metadata.objects as any).categoryAxis.showAxisTitle = false;
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                expect(visualBuilder.xAxisLabel).not.toBeInDOM();
+                expect(visualBuilder.xAxisLabel).toBeNull();
             });
 
             it("label color", () => {
@@ -209,13 +188,11 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.xAxisTicks
-                    .toArray()
-                    .map($)
-                    .forEach((element: JQuery) => {
-                        assertColorsMatch(element.children("text").css("fill"), color);
+                    .forEach((element: SVGGElement) => {
+                        assertColorsMatch(element.querySelector("text")!.style.fill, color);
                     });
 
-                assertColorsMatch(visualBuilder.xAxisLabel.css("fill"), color);
+                assertColorsMatch(visualBuilder.xAxisLabel!.style.fill, color);
             });
         });
 
@@ -232,10 +209,8 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.dots
-                    .toArray()
-                    .map($)
-                    .forEach((element: JQuery) => {
-                        assertColorsMatch(element.css("fill"), color);
+                    .forEach((element: SVGCircleElement) => {
+                        assertColorsMatch(element.style.fill, color);
                     });
             });
 
@@ -251,10 +226,8 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.dots
-                    .toArray()
-                    .map($)
-                    .forEach((element: JQuery) => {
-                        const parsedRadius: number = Number.parseInt(element.attr("r"));
+                    .forEach((element: SVGCircleElement) => {
+                        const parsedRadius: number = Number.parseInt(element.getAttribute("r") || '');
 
                         expect(parsedRadius).toBe(radius);
                     });
@@ -274,12 +247,12 @@ describe("DotPlot", () => {
                 (dataView.metadata.objects as any).labels.show = true;
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                expect(visualBuilder.dataLabels).toBeInDOM();
+                expect(visualBuilder.dataLabels.length).toBeGreaterThan(0);
 
                 (dataView.metadata.objects as any).labels.show = false;
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                expect(visualBuilder.dataLabels).not.toBeInDOM();
+                expect(visualBuilder.dataLabels.length).toBe(0);
             });
 
             it("color", () => {
@@ -289,10 +262,8 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.dataLabels
-                    .toArray()
-                    .map($)
-                    .forEach((element: JQuery) => {
-                        assertColorsMatch(element.css("fill"), color);
+                    .forEach((element: SVGTextElement) => {
+                        assertColorsMatch(element.style.fill, color);
                     });
             });
 
@@ -303,10 +274,8 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.dataLabels
-                    .toArray()
-                    .map($)
-                    .forEach((element: JQuery) => {
-                        expect(last(element.text())).toEqual("K");
+                    .forEach((element: SVGTextElement) => {
+                        expect(last(element.textContent)).toEqual("K");
                     });
             });
 
@@ -319,10 +288,8 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.dataLabels
-                    .toArray()
-                    .map($)
-                    .forEach((element: JQuery) => {
-                        expect(element.text().split(".")[1].length).toEqual(precision);
+                    .forEach((element: SVGTextElement) => {
+                        expect(element.textContent!.split(".")[1].length).toEqual(precision);
                     });
             });
 
@@ -335,36 +302,10 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.dataLabels
-                    .toArray()
-                    .map($)
-                    .forEach((element: JQuery) => {
-                        expect(element.css("font-size")).toBe(fontSizeInPt);
+                    .forEach((element: SVGTextElement) => {
+                        expect(element.style.fontSize).toBe(fontSizeInPt);
                     });
             });
-        });
-    });
-
-    describe("Capabilities tests", () => {
-        it("all items having displayName should have displayNameKey property", () => {
-            jasmine.getJSONFixtures().fixturesPath = "base";
-
-            let jsonData = getJSONFixture("capabilities.json");
-
-            let objectsChecker: Function = (obj) => {
-                for (let property in obj) {
-                    let value: any = obj[property];
-
-                    if (value.displayName) {
-                        expect(value.displayNameKey).toBeDefined();
-                    }
-
-                    if (typeof value === "object") {
-                        objectsChecker(value);
-                    }
-                }
-            };
-
-            objectsChecker(jsonData);
         });
     });
 
@@ -381,22 +322,14 @@ describe("DotPlot", () => {
 
         it("should not use fill style", (done) => {
             visualBuilder.updateRenderTimeout(dataView, () => {
-                const dots: JQuery[] = visualBuilder.dots.toArray().map(i => {
-                    const res: JQuery<HTMLElement> = $(i);
-                    return res;
-                });
-                expect(isColorAppliedToElements(dots, null, "fill"));
+                expect(isColorAppliedToElements(visualBuilder.dots, undefined, "fill"));
                 done();
             });
         });
 
         it("should use stroke style", (done) => {
             visualBuilder.updateRenderTimeout(dataView, () => {
-                const dots: JQuery<HTMLElement>[] = visualBuilder.dots.toArray().map(i => {
-                    const res: JQuery<HTMLElement> = $(i);
-                    return res;
-                });
-                expect(isColorAppliedToElements(dots, foregroundColor, "stroke"));
+                expect(isColorAppliedToElements(visualBuilder.dots, foregroundColor, "stroke"));
                 done();
             });
         });

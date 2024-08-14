@@ -41,39 +41,75 @@ export class DotPlotBuilder extends VisualBuilderBase<VisualClass> {
         return new VisualClass(options);
     }
 
-    public get mainElement() {
-        return $(this.element).find("svg.dotplot");
+    public get mainElement(): SVGSVGElement {
+        return this.element.querySelector("svg.dotplot")!;
     }
 
-    public get dataLabels() {
+    public get labels(): SVGGElement | null {
+        return this.mainElement.querySelector("g.labels") || null;
+    }
+
+    public get dataLabels(): SVGTextElement[] {
+        const labels = this.labels;
+        if (labels) {
+            return Array.from(labels.querySelectorAll("text.data-labels"));
+        }
+
+        return [];
+    }
+
+    public get axisGraphicsContext(): SVGGElement {
+        return this.mainElement.querySelector("g.axisGraphicsContext")!;
+    }
+
+    public get xAxis(): SVGGElement | null {
+        return this.axisGraphicsContext.querySelector("g.x.axis");
+    }
+
+    public get xAxisLabel(): SVGTextElement | null {
+        return this.xAxis?.querySelector("text.xAxisLabel") || null;
+    }
+
+    public get dotGroups(): NodeListOf<SVGGElement> {
         return this.mainElement
-            .children("g.labels")
-            .children("text.data-labels");
+            .querySelector("g.dotplotSelector")!
+            .querySelectorAll("g.dotplotGroup");
     }
 
-    public get axisGraphicsContext() {
-        return this.mainElement.children("g.axisGraphicsContext");
+    public get dots(): SVGCircleElement[] {
+        const dots: SVGCircleElement[] = [];
+
+        this.dotGroups.forEach((group) => {
+            const dot = group.querySelector("circle.dot") as SVGCircleElement;
+
+            if (dot) {
+                dots.push(dot);
+            }
+        });
+
+        return dots;
     }
 
-    public get xAxis() {
-        return this.axisGraphicsContext.children("g.x.axis");
+    public get xAxisTicks(): SVGGElement[] {
+        const xAxis = this.xAxis
+        if (xAxis) {
+            return Array.from(xAxis.querySelectorAll("g.tick"));
+        }
+
+        return [];
     }
 
-    public get xAxisLabel() {
-        return this.xAxis.children("text.xAxisLabel");
-    }
+    public get xAxisTickText(): SVGTextElement[] {
+        const texts: SVGTextElement[] = [];
 
-    public get dotGroups() {
-        return this.mainElement
-            .children("g.dotplotSelector")
-            .children("g.dotplotGroup");
-    }
+        this.xAxisTicks.forEach((tick) => {
+            const text = tick.querySelector("text") as SVGTextElement;
 
-    public get dots() {
-        return this.dotGroups.children("circle.circleSelector");
-    }
+            if (text) {
+                texts.push(text);
+            }
+        });
 
-    public get xAxisTicks() {
-        return this.xAxis.children("g.tick");
+        return texts;
     }
 }
