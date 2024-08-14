@@ -32,7 +32,7 @@ import DataView = powerbi.DataView;
 import { DotPlotData } from "./visualData";
 import { DotPlotBuilder } from "./visualBuilder";
 
-import { clickElement, assertColorsMatch } from "powerbi-visuals-utils-testutils";
+import { assertColorsMatch, ClickEventType } from "powerbi-visuals-utils-testutils";
 
 import { isColorAppliedToElements, getSolidColorStructuralObject } from "./helpers/helpers";
 
@@ -66,7 +66,7 @@ describe("DotPlot", () => {
                     .length;
 
                 expect(dotplotGroupLength).toBeGreaterThan(0);
-                expect(tickLength).toBe(dataView.categorical.categories[0].values.length);
+                expect(tickLength).toBe(dataView.categorical!.categories![0].values.length);
 
                 done();
             });
@@ -77,16 +77,23 @@ describe("DotPlot", () => {
             dataView = defaultDataViewBuilder.getDataView();
 
             visualBuilder.updateRenderTimeout(dataView, () => {
-                visualBuilder.xAxisTicks.each((i, e) => {
-                    if (!$(e).children("text").get(0)
-                    && $(e).children("text").get(0).firstChild
-                    && !expect(
-                        $(e).children("text").get(0).firstChild.textContent
-                    ).toEqual(
-                        String(dataView.categorical.categories[0].values[i]) || "(Blank)"
-                    )) {
-                        return false;
-                    }
+                // visualBuilder.xAxisTicks.each((i, e) => {
+                //     if (!$(e).children("text").get(0)
+                //     && $(e).children("text").get(0)!.firstChild
+                //     && !expect(
+                //         $(e).children("text").get(0)!.firstChild!.textContent
+                //     ).toEqual(
+                //         String(dataView.categorical.categories[0].values[i]) || "(Blank)"
+                //     )) {
+                //         return false;
+                //     }
+                // });
+
+                visualBuilder.xAxisTicks.each((i, element) => {
+                    const textElement: Element = element.querySelector("text") as Element;
+
+                    expect(textElement).toBeDefined();
+                    expect(textElement.textContent).toMatch(`${String(dataView.categorical!.categories![0].values[i])}|(Blank)`);
                 });
 
                 done();
@@ -101,9 +108,9 @@ describe("DotPlot", () => {
                 dataView.categorical.categories[0].identity[0];
 
             visualBuilder.updateRenderTimeout(dataView, () => {
-                const groupsRects: ClientRect[] = visualBuilder.dotGroups
+                const groupsRects = visualBuilder.dotGroups
                     .toArray()
-                    .map((element: Element) => element.getBoundingClientRect());
+                    .map((element: HTMLElement) => element.getBoundingClientRect());
 
                 expect(uniq(groupsRects.map(x => x.left)).length).toEqual(groupsRects.length);
 
@@ -124,8 +131,8 @@ describe("DotPlot", () => {
                 secondGroup: JQuery = visualBuilder.dotGroups.eq(1),
                 thirdGroup: JQuery = visualBuilder.dotGroups.eq(2);
 
-            clickElement(firstGroup);
-            clickElement(secondGroup, true);
+            firstGroup.get(0)?.dispatchEvent(new MouseEvent("click"));
+            secondGroup.get(0)?.dispatchEvent(new MouseEvent("click", { ctrlKey: true}));
 
             expect(parseFloat(firstGroup.css("fill-opacity"))).toBe(1);
             expect(parseFloat(secondGroup.css("fill-opacity"))).toBe(1);

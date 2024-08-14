@@ -42,7 +42,7 @@ export class DotPlotBuilder extends VisualBuilderBase<VisualClass> {
     }
 
     public get mainElement() {
-        return this.element.find("svg.dotplot");
+        return $(this.element).find("svg.dotplot");
     }
 
     public get dataLabels() {

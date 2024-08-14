@@ -30,6 +30,7 @@
     "d3-axis": "^3.0.0",
     "d3-scale": "^4.0.2",
     "d3-selection": "^3.0.0",
+    "jquery": "^3.7.1",
     "powerbi-models": "^1.15.2",
     "powerbi-visuals-api": "5.11.0",
     "powerbi-visuals-tools": "5.5.1",
@@ -64,9 +65,7 @@
     "karma": "^6.4.4",
     "karma-chrome-launcher": "^3.2.0",
     "karma-coverage": "^2.2.1",
-    "karma-coverage-istanbul-reporter": "^3.0.3",
     "karma-jasmine": "^5.1.0",
-    "karma-remap-istanbul": "^0.6.0",
     "karma-sourcemap-loader": "^0.4.0",
     "karma-typescript": "^5.5.4",
     "karma-typescript-preprocessor": "^0.4.0",
@@ -74,6 +73,7 @@
     "lodash": "^4.17.21",
     "playwright-chromium": "^1.46.0",
     "powerbi-visuals-utils-testutils": "^6.1.1",
+    "style-loader": "^4.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   }
