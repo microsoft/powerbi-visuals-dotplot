@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-import * as d3 from "d3";
-
 import { getOpacity } from "./utils";
 import { DotPlotDataGroup } from "./dataInterfaces";
 

@@ -25,8 +25,6 @@
  *  THE SOFTWARE.
  */
 
-import * as d3 from "d3";
-
 import { isEmpty } from "lodash/lang";
 import { min, max } from "lodash/math";
 import { last } from "lodash/array";
@@ -60,8 +58,8 @@ import VisualObjectInstanceEnumeration = powerbi.VisualObjectInstanceEnumeration
 
 // d3
 import { Axis } from "d3-axis";
-import { ScaleLogarithmic as LogScale, ScaleLinear as LinearScale, ScaleOrdinal as OrdinalScale } from "d3-scale";
-type Selection<T> = d3.Selection<any, T, any, any>;
+import { Selection, select } from "d3-selection";
+import { ScaleLogarithmic as LogScale, ScaleLinear as LinearScale, ScaleOrdinal as OrdinalScale, scaleLinear, scaleLog } from "d3-scale";
 
 // powerbi.visuals
 import ISelectionId = powerbi.visuals.ISelectionId;
@@ -104,7 +102,7 @@ import { ColorHelper } from "powerbi-visuals-utils-colorutils";
 
 const ValueText = "Visual_Value";
 
-export function appendClearCatcher(selection: Selection<any>) {
+export function appendClearCatcher(selection: Selection<SVGSVGElement, unknown, HTMLDivElement, undefined>): Selection<SVGRectElement, unknown, HTMLDivElement, undefined> {
     return selection
         .append("rect")
         .classed("clearCatcher", true)
@@ -113,7 +111,6 @@ export function appendClearCatcher(selection: Selection<any>) {
 }
 
 export class DotPlot implements IVisual {
-
     private static MinOpacity: number = 0;
     private static MaxOpacity: number = 1;
 
@@ -206,16 +203,17 @@ export class DotPlot implements IVisual {
     private get settings() {
         return this.data && this.data.settings;
     }
+
     public layout: VisualLayout;
     public name: string;
     public title: string;
 
     private events: IVisualEventService;
-    private divContainer: Selection<any>;
-    private svg: Selection<any>;
-    private xAxisSelection: Selection<any>;
-    private dotPlot: Selection<any>;
-    private clearCatcher: Selection<any>;
+    private divContainer: Selection<HTMLDivElement, unknown, null, undefined>;
+    private svg: Selection<SVGSVGElement, unknown, HTMLDivElement, undefined>;
+    private xAxisSelection: Selection<SVGGElement, unknown, HTMLDivElement, unknown>;
+    private dotPlot: Selection<SVGGElement, unknown, HTMLDivElement, undefined>;
+    private clearCatcher: Selection<SVGRectElement, unknown, HTMLDivElement, undefined>;
     private behavior: IInteractiveBehavior;
 
     private colorPalette: IColorPalette;
@@ -240,10 +238,10 @@ export class DotPlot implements IVisual {
         labelOrientation: DotPlotLabelsOrientation.Horizontal
     };
 
-    private static getTooltipData(value: any, localizationManager: ILocalizationManager): VisualTooltipDataItem[] {
+    private static getTooltipData(value: string, localizationManager: ILocalizationManager): VisualTooltipDataItem[] {
         return [{
             displayName: localizationManager.getDisplayName(ValueText),
-            value: value.toString()
+            value: value
         }];
     }
 
@@ -345,7 +343,7 @@ export class DotPlot implements IVisual {
                 - radius * DotPlot.RadiusFactor - labelFontSize - layout.margin.top - maxLabelHeight,
             maxDots: number = Math.floor(dotsTotalHeight / diameter);
 
-        const yScale: LinearScale<number, number> = d3.scaleLinear()
+        const yScale: LinearScale<number, number> = scaleLinear()
             .domain([DotPlot.MinAmountOfDots, maxDots])
             .range([dotsTotalHeight, DotPlot.MinAmountOfDots]);
 
@@ -353,7 +351,7 @@ export class DotPlot implements IVisual {
             minDots = minValue / (maxValue / maxDots),
             additionalValue = minValue <= 1 ? -minValue + 1 : 0; // negative values scales incorrect
 
-        const dotScale: LogScale<number, number> = d3.scaleLog()
+        const dotScale: LogScale<number, number> = scaleLog()
             .domain(DotPlot.getDomain(minValue + additionalValue, maxValue + additionalValue))
             .range(DotPlot.getDomain(minDots > maxDots ? 1 : minDots, maxDots))
             .clamp(true);
@@ -459,7 +457,7 @@ export class DotPlot implements IVisual {
 
         this.layout = new VisualLayout(null, DotPlot.Margin);
 
-        this.divContainer = d3.select(options.element)
+        this.divContainer = select(options.element)
             .append("div")
             .classed(DotPlot.ScrollableContainerSelector.className, true);
 
@@ -469,7 +467,7 @@ export class DotPlot implements IVisual {
 
         this.clearCatcher = appendClearCatcher(this.svg);
 
-        const axisGraphicsContext: Selection<any> = this.svg
+        const axisGraphicsContext = this.svg
             .append("g")
             .classed(DotPlot.AxisSelector.className, true);
 
@@ -542,7 +540,7 @@ export class DotPlot implements IVisual {
             if (this.settings.labels.show) {
                 const layout: ILabelLayout = this.getDotPlotLabelsLayout();
 
-                const labels: Selection<DotPlotDataGroup> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
+                const labels: Selection<any, DotPlotDataGroup, null, unknown> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
                     this.data.dataGroups,
                     this.svg,
                     layout,
@@ -589,14 +587,14 @@ export class DotPlot implements IVisual {
     }
 
     private drawDotPlot(): void {
-        const dotGroupSelection: Selection<DotPlotDataGroup> = this.dotPlot
+        const dotGroupSelection: Selection<any, DotPlotDataGroup, any, any> = this.dotPlot
             .selectAll(DotPlot.PlotGroupSelector.selectorName)
             .data(this.data.dataGroups);
 
             const hasSelection: boolean = this.interactivityService
             && this.interactivityService.hasSelection();
 
-        const newDotGroupSelection: Selection<DotPlotDataGroup> = dotGroupSelection
+        const newDotGroupSelection: Selection<any, DotPlotDataGroup, any, any> = dotGroupSelection
             .enter()
             .append("g")
             .classed(DotPlot.PlotGroupSelector.className, true);
@@ -618,12 +616,12 @@ export class DotPlot implements IVisual {
                     false);
             });
 
-        const circleSelection: Selection<DotPlotDataPoint> = dotGroupSelection
+        const circleSelection: Selection<any, DotPlotDataPoint, any, any> = dotGroupSelection
             .merge(newDotGroupSelection)
             .selectAll(DotPlot.CircleSelector.selectorName)
             .data((dataPoint: DotPlotDataGroup) => dataPoint.dataPoints);
 
-        const newCircleSelection: Selection<DotPlotDataPoint> = circleSelection
+        const newCircleSelection: Selection<any, DotPlotDataPoint, any, any> = circleSelection
             .enter()
             .append("circle")
             .classed(DotPlot.CircleSelector.className, true);
@@ -721,7 +719,7 @@ export class DotPlot implements IVisual {
             .style("width", PixelConverter.toString(VisualLayout.MinViewportSize));
     }
 
-    private renderTooltip(selection: Selection<DotPlotDataGroup>): void {
+    private renderTooltip(selection: Selection<any, DotPlotDataGroup, any, any>): void {
         this.tooltipServiceWrapper.addTooltip(
             selection,
             (tooltipEvent: TooltipEventArgs<DotPlotDataGroup>) => {
