@@ -33,8 +33,8 @@ import { DotPlotSettings } from "./settings";
 
 import ISelectionId = powerbi.visuals.ISelectionId;
 
-import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
-import SelectableDataPoint = interactivityService.SelectableDataPoint;
+import { interactivitySelectionService } from "powerbi-visuals-utils-interactivityutils";
+import SelectableDataPoint = interactivitySelectionService.SelectableDataPoint;
 
 import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
 import IDataLabelInfo = dataLabelInterfaces.IDataLabelInfo;
@@ -54,9 +54,7 @@ export interface DotPlotDataPoint {
     tooltipInfo: VisualTooltipDataItem[];
 }
 
-export interface DotPlotDataGroup extends
-    SelectableDataPoint,
-    IDataLabelInfo {
+export interface DotPlotDataGroup extends SelectableDataPoint, IDataLabelInfo {
     label: string;
     value: number;
     category: DotPlotChartCategory;

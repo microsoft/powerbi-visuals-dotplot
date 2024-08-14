@@ -25,7 +25,6 @@
  *  THE SOFTWARE.
  */
 
-import "@babel/polyfill";
 import * as d3 from "d3";
 
 import { isEmpty } from "lodash/lang";
@@ -68,21 +67,18 @@ type Selection<T> = d3.Selection<any, T, any, any>;
 import ISelectionId = powerbi.visuals.ISelectionId;
 
 // powerbi-visuals-utils-formattingutils
-import { valueFormatter as vf, textMeasurementService as tms } from "powerbi-visuals-utils-formattingutils";
-import valueFormatter = vf.valueFormatter;
-import TextProperties = tms.TextProperties;
+import { valueFormatter as vf, textMeasurementService } from "powerbi-visuals-utils-formattingutils";
+import { TextProperties } from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
 import IValueFormatter = vf.IValueFormatter;
-import textMeasurementService = tms.textMeasurementService;
 
 // powerbi-visuals-utils-typeutils
 import { pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
 
 // powerbi-visuals-utils-interactivityutils
-import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
-import appendClearCatcher = interactivityService.appendClearCatcher;
-import IInteractiveBehavior = interactivityService.IInteractiveBehavior;
-import IInteractivityService = interactivityService.IInteractivityService;
-import createInteractivityService = interactivityService.createInteractivityService;
+import { interactivityBaseService, interactivitySelectionService } from "powerbi-visuals-utils-interactivityutils";
+import IInteractiveBehavior = interactivityBaseService.IInteractiveBehavior;
+import IInteractivityService = interactivityBaseService.IInteractivityService;
+import createInteractivityService = interactivitySelectionService.createInteractivitySelectionService;
 
 // powerbi-visuals-utils-chartutils
 import { axis, dataLabelUtils, dataLabelInterfaces, axisInterfaces, axisScale } from "powerbi-visuals-utils-chartutils";
@@ -107,6 +103,14 @@ import { TooltipEventArgs, ITooltipServiceWrapper, createTooltipServiceWrapper }
 import { ColorHelper } from "powerbi-visuals-utils-colorutils";
 
 const ValueText = "Visual_Value";
+
+export function appendClearCatcher(selection: Selection<any>) {
+    return selection
+        .append("rect")
+        .classed("clearCatcher", true)
+        .attr("width", "100%")
+        .attr("height", "100%");
+}
 
 export class DotPlot implements IVisual {
 
@@ -222,7 +226,7 @@ export class DotPlot implements IVisual {
     private dataViewport: IViewport;
     private xAxisProperties: IAxisProperties;
 
-    private interactivityService: IInteractivityService;
+    private interactivityService: IInteractivityService<DotPlotDataGroup>;
     private scaleType: string = AxisScale.linear;
 
     private strokeWidth: number = 1;
@@ -243,6 +247,7 @@ export class DotPlot implements IVisual {
         }];
     }
 
+    // eslint-disable-next-line max-lines-per-function
     public static converter(
         dataView: DataView,
         height: number,
@@ -272,16 +277,16 @@ export class DotPlot implements IVisual {
         const minValue: number = min<number>(valueValues),
             maxValue: number = max<number>(valueValues);
 
-        const valuesFormatter: IValueFormatter = valueFormatter.create({
-            format: valueFormatter.getFormatStringByColumn(valueColumn.source),
+        const valuesFormatter: IValueFormatter = vf.create({
+            format: vf.getFormatStringByColumn(valueColumn.source),
             precision: settings.labels.labelPrecision,
             value: settings.labels.labelDisplayUnits || maxValue
         });
 
         const formattedValues: string[] = valueValues.map(valuesFormatter.format);
 
-        const categoriesFormatter: IValueFormatter = valueFormatter.create({
-            format: valueFormatter.getFormatStringByColumn(categoryColumn.source)
+        const categoriesFormatter: IValueFormatter = vf.create({
+            format: vf.getFormatStringByColumn(categoryColumn.source)
         });
 
         const categories: DotPlotChartCategory[] = categoryColumn.values
@@ -647,13 +652,12 @@ export class DotPlot implements IVisual {
                 columns: dotGroupSelection.merge(newDotGroupSelection),
                 clearCatcher: this.clearCatcher,
                 interactivityService: this.interactivityService,
-                isHighContrastMode: this.colorHelper.isHighContrast
+                isHighContrastMode: this.colorHelper.isHighContrast,
+                dataPoints: this.data.dataGroups,
+                behavior: this.behavior
             };
 
-            this.interactivityService.bind(
-                this.data.dataGroups,
-                this.behavior,
-                behaviorOptions);
+            this.interactivityService.bind(behaviorOptions);
         }
     }
 

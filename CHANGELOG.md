@@ -1,3 +1,6 @@
+## 2.1.0
+* Update API to 5.11.0, tools to 5.5.1 and other packages
+
 ## 2.0.1
 * Fixed bug with styles import
 

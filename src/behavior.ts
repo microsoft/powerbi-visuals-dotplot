@@ -32,15 +32,16 @@ import { DotPlotDataGroup } from "./dataInterfaces";
 // d3
 import { Selection } from "d3-selection";
 
-import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
-import ISelectionHandler = interactivityService.ISelectionHandler;
-import IInteractiveBehavior = interactivityService.IInteractiveBehavior;
-import IInteractivityService = interactivityService.IInteractivityService;
+import { interactivityBaseService } from "powerbi-visuals-utils-interactivityutils";
+import ISelectionHandler = interactivityBaseService.ISelectionHandler;
+import IInteractiveBehavior = interactivityBaseService.IInteractiveBehavior;
+import IInteractivityService = interactivityBaseService.IInteractivityService;
+import { IBehaviorOptions } from "powerbi-visuals-utils-interactivityutils/lib/interactivityBaseService";
 
-export interface DotplotBehaviorOptions {
+export interface DotplotBehaviorOptions extends IBehaviorOptions<DotPlotDataGroup> {
     columns: Selection<any, DotPlotDataGroup, any, any>;
     clearCatcher: Selection<any, any, any, any>;
-    interactivityService: IInteractivityService;
+    interactivityService: IInteractivityService<DotPlotDataGroup>;
     isHighContrastMode: boolean;
 }
 
@@ -48,7 +49,7 @@ export class DotplotBehavior implements IInteractiveBehavior {
     private columns: Selection<any, DotPlotDataGroup, any, any>;
 
     private clearCatcher: Selection<any, any, any, any>;
-    private interactivityService: IInteractivityService;
+    private interactivityService: IInteractivityService<DotPlotDataGroup>;
     private isHighContrastMode: boolean;
 
     public bindEvents(
@@ -60,11 +61,8 @@ export class DotplotBehavior implements IInteractiveBehavior {
         this.interactivityService = options.interactivityService;
         this.isHighContrastMode = options.isHighContrastMode;
 
-        this.columns.on("click", (dataPoint: DotPlotDataGroup) => {
-            selectionHandler.handleSelection(
-                dataPoint,
-                (d3.event as MouseEvent).ctrlKey
-            );
+        this.columns.on("click", (event: MouseEvent, dataPoint: DotPlotDataGroup) => {
+            selectionHandler.handleSelection(dataPoint, event.ctrlKey || event.shiftKey || event.metaKey);
         });
 
         this.clearCatcher.on("click", () => {
