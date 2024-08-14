@@ -494,7 +494,6 @@ export class DotPlot implements IVisual {
                 ? options.dataViews[0]
                 : null;
 
-            this.layout.viewportIn.height = this.layout.viewportIn.height;
             this.layout.viewport = options.viewport;
 
             const data: DotPlotData = DotPlot.converter(
@@ -590,14 +589,14 @@ export class DotPlot implements IVisual {
     }
 
     private drawDotPlot(): void {
-        let dotGroupSelection: Selection<DotPlotDataGroup> = this.dotPlot
+        const dotGroupSelection: Selection<DotPlotDataGroup> = this.dotPlot
             .selectAll(DotPlot.PlotGroupSelector.selectorName)
             .data(this.data.dataGroups);
 
             const hasSelection: boolean = this.interactivityService
             && this.interactivityService.hasSelection();
 
-        let newDotGroupSelection: Selection<DotPlotDataGroup> = dotGroupSelection
+        const newDotGroupSelection: Selection<DotPlotDataGroup> = dotGroupSelection
             .enter()
             .append("g")
             .classed(DotPlot.PlotGroupSelector.className, true);
@@ -619,12 +618,12 @@ export class DotPlot implements IVisual {
                     false);
             });
 
-        let circleSelection: Selection<DotPlotDataPoint> = dotGroupSelection
+        const circleSelection: Selection<DotPlotDataPoint> = dotGroupSelection
             .merge(newDotGroupSelection)
             .selectAll(DotPlot.CircleSelector.selectorName)
             .data((dataPoint: DotPlotDataGroup) => dataPoint.dataPoints);
 
-        let newCircleSelection: Selection<DotPlotDataPoint> = circleSelection
+        const newCircleSelection: Selection<DotPlotDataPoint> = circleSelection
             .enter()
             .append("circle")
             .classed(DotPlot.CircleSelector.className, true);
