@@ -13,7 +13,7 @@
     "pbiviz": "pbiviz",
     "start": "pbiviz start",
     "package": "pbiviz package",
-    "lint": "tslint -r \"node_modules/tslint-microsoft-contrib\" \"+(src|test)/**/*.ts\"",
+    "eslint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
     "test": "karma start",
     "cert": "pbiviz --create-cert"
   },
