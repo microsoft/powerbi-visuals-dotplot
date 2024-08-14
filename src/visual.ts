@@ -298,7 +298,7 @@ export class DotPlot implements IVisual {
                 };
             });
 
-        const labelFontSize: number = PixelConverter.fromPointToPixel(settings.labels.fontSize.value.valueOf());
+        const labelFontSize: number = PixelConverter.fromPointToPixel(settings.labels.font.fontSize.value.valueOf());
 
         const maxXAxisHeight: number =
             (settings.categoryAxis.show.value
@@ -533,7 +533,7 @@ export class DotPlot implements IVisual {
             if (this.formattingSettings.labels.show.value) {
                 const layout: ILabelLayout = this.getDotPlotLabelsLayout();
 
-                const labels: Selection<any, DotPlotDataGroup, null, unknown> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
+                const labels: Selection<SVGTextElement, DotPlotDataGroup, SVGGElement, unknown> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
                     this.data.dataGroups,
                     this.svg,
                     layout,
@@ -558,6 +558,12 @@ export class DotPlot implements IVisual {
                             return translate(dx, dy);
                         }
                     });
+
+                    labels
+                        .style("font-family", this.formattingSettings.labels.font.fontFamily.value)
+                        .style("font-style", this.formattingSettings.labels.font.italic.value ? "italic" : "normal")
+                        .style("font-weight", this.formattingSettings.labels.font.bold.value ? "bold" : "normal")
+                        .style("text-decoration", this.formattingSettings.labels.font.underline.value ? "underline" : "none");
                 }
             }
             else {
@@ -659,7 +665,7 @@ export class DotPlot implements IVisual {
             labelText: (dataGroup: DotPlotDataGroup) => {
                 return dataLabelUtils.getLabelFormattedText({
                     label: dataGroup.label,
-                    fontSize: this.formattingSettings.labels.fontSize.value.valueOf(),
+                    fontSize: this.formattingSettings.labels.font.fontSize.value.valueOf(),
                     maxWidth: this.dataViewport.width,
                 });
             },

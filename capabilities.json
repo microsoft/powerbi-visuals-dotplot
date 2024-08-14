@@ -133,6 +133,28 @@
                   }
                 }
               },
+              "fontFamily": {
+                "type": {
+                    "formatting": {
+                        "fontFamily": true
+                    }
+                }
+              },
+              "bold": {
+                "type": {
+                    "bool": true
+                }
+              },
+              "italic": {
+                "type": {
+                    "bool": true
+                }
+              },
+              "underline": {
+                "type": {
+                    "bool": true
+                }
+              },
                "orientation": {
                     "type": {
                       "enumeration": [

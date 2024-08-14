@@ -87,6 +87,38 @@ class LabelsSettingsCard extends Card {
         value: { value: dataLabelUtils.defaultLabelColor }
     });
 
+    font = new formattingSettings.FontControl({
+        name: "font",
+        displayNameKey: "Visual_Font",
+        fontSize: new formattingSettings.NumUpDown({
+            name: "fontSize",
+            displayName: "Text size",
+            displayNameKey: "Visual_TextSize",
+            value: dataLabelUtils.DefaultFontSizeInPt,
+            options: {
+                minValue: { value: 8, type: ValidatorType.Min },
+                maxValue: { value: 60, type: ValidatorType.Max },
+            }
+        }),
+        fontFamily: new formattingSettings.FontPicker({
+            name: "fontFamily",
+            value: "Arial, sans-serif"
+        }),
+        bold: new formattingSettings.ToggleSwitch({
+            name: "bold",
+            value: false,
+        }),
+        italic: new formattingSettings.ToggleSwitch({
+            name: "italic",
+            value: false,
+        }),
+        underline: new formattingSettings.ToggleSwitch({
+            name: "underline",
+            value: false,
+        }),
+    });
+
+
     labelDisplayUnits = new formattingSettings.AutoDropdown({
         name: "labelDisplayUnits",
         displayName: "Display units",
@@ -109,17 +141,6 @@ class LabelsSettingsCard extends Card {
         }
     });
 
-    fontSize = new formattingSettings.NumUpDown({
-        name: "fontSize",
-        displayName: "Text size",
-        displayNameKey: "Visual_TextSize",
-        value: dataLabelUtils.DefaultFontSizeInPt,
-        options: {
-            minValue: { value: 8, type: ValidatorType.Min },
-            maxValue: { value: 60, type: ValidatorType.Max },
-        }
-    });
-
     orientation = new formattingSettings.ItemDropdown({
         name: "orientation",
         displayName: "Orientation",
@@ -134,7 +155,7 @@ class LabelsSettingsCard extends Card {
     displayNameKey = "Visual_DataLabels";
     description = "Display data label options";
     descriptionKey = "Visual_Description_DataLabels";
-    slices = [this.color, this.labelDisplayUnits, this.labelPrecision, this.fontSize, this.orientation];
+    slices = [this.color, this.font, this.labelDisplayUnits, this.labelPrecision, this.orientation];
 }
 
 export class DotPlotSettingsModel extends Model {
