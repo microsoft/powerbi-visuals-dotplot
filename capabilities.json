@@ -184,5 +184,6 @@
         ]
     },
     "supportsKeyboardFocus": true,
+    "supportsMultiVisualSelection": true,
     "privileges": []
 }
