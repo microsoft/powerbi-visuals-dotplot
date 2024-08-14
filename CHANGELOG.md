@@ -4,6 +4,7 @@
 * Split d3 into submodules
 * Remove jquery
 * Migrate to new formatting pane
+* Add report page tooltips
 
 ## 2.0.1
 * Fixed bug with styles import
