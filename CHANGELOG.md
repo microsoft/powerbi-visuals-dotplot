@@ -3,6 +3,7 @@
 * Migrate from tslint to eslint, from puppeteer to playwright-chromium
 * Split d3 into submodules
 * Remove jquery
+* Migrate to new formatting pane
 
 ## 2.0.1
 * Fixed bug with styles import

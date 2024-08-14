@@ -29,8 +29,6 @@ import powerbi from "powerbi-visuals-api";
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
 
-import { DotPlotSettings } from "./settings";
-
 import ISelectionId = powerbi.visuals.ISelectionId;
 
 import { interactivitySelectionService } from "powerbi-visuals-utils-interactivityutils";
@@ -38,10 +36,11 @@ import SelectableDataPoint = interactivitySelectionService.SelectableDataPoint;
 
 import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
 import IDataLabelInfo = dataLabelInterfaces.IDataLabelInfo;
+import { DotPlotSettingsModel } from "./dotPlotSettingsModel";
 
 export enum DotPlotLabelsOrientation {
-    Horizontal = <any>"Horizontal",
-    Vertical = <any>"Vertical",
+    Horizontal = "Horizontal",
+    Vertical = "Vertical",
 }
 
 export interface DotPlotChartCategory {
@@ -68,7 +67,7 @@ export interface DotPlotDataGroup extends SelectableDataPoint, IDataLabelInfo {
 
 export interface DotPlotData {
     dataGroups: DotPlotDataGroup[];
-    settings: DotPlotSettings;
+    settings: DotPlotSettingsModel;
     categoryAxisName: string;
     maxXAxisHeight: number;
     categoryLabelHeight: number;

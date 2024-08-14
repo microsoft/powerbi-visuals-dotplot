@@ -58,24 +58,16 @@
             "displayNameKey": "Visual_XAxis",
             "properties": {
                 "show": {
-                    "displayName": "Show",
-                    "displayNameKey": "Visual_Show",
                     "type": {
                         "bool": true
                     }
                 },
                 "showAxisTitle": {
-                    "displayName": "Title",
-                    "displayNameKey": "Visual_Title",
-                    "description": "Title options",
-                    "descriptionKey": "Visual_Description_Title",
                     "type": {
                         "bool": true
                     }
                 },
                 "labelColor": {
-                    "displayName": "Label color",
-                    "displayNameKey": "Visual_LabelColor",
                     "type": {
                         "fill": {
                             "solid": {
@@ -87,12 +79,8 @@
             }
         },
         "dataPoint": {
-            "displayName": "Dots",
-            "displayNameKey": "Visual_Dots",
             "properties": {
                 "fill": {
-                    "displayName": "Fill",
-                    "displayNameKey": "Visual_Fill",
                     "type": {
                         "fill": {
                             "solid": {
@@ -102,8 +90,6 @@
                     }
                 },
                 "radius": {
-                    "displayName": "Radius",
-                    "displayNameKey": "Visual_Radius",
                     "type": {
                         "numeric": true
                     }
@@ -111,23 +97,13 @@
             }
         },
         "labels": {
-            "displayName": "Data labels",
-            "displayNameKey": "Visual_DataLabels",
-            "description": "Display data label options",
-            "descriptionKey": "Visual_Description_DataLabels",
             "properties": {
                 "show": {
-                    "displayName": "Show",
-                    "displayNameKey": "Visual_Show",
                     "type": {
                         "bool": true
                     }
                 },
                 "color": {
-                    "displayName": "Color",
-                    "displayNameKey": "Visual_Color",
-                    "description": "Select color for data labels",
-                    "descriptionKey": "Visual_Description_Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -137,10 +113,6 @@
                     }
                 },
                 "labelDisplayUnits": {
-                    "displayName": "Display units",
-                    "displayNameKey": "Visual_DisplayUnits",
-                    "description": "Select the units (millions, billions, etc.)",
-                    "descriptionKey": "Visual_Description_DisplayUnits",
                     "type": {
                         "formatting": {
                             "labelDisplayUnits": true
@@ -149,19 +121,12 @@
                     "suppressFormatPainterCopy": true
                 },
                 "labelPrecision": {
-                    "displayName": "Decimal places",
-                    "displayNameKey": "Visual_DecimalPlaces",
-                    "description": "Select the number of decimal places to display",
-                    "descriptionKey": "Visual_Description_DecimalPlaces",
-                    "placeHolderText": "Auto",
                     "type": {
                         "numeric": true
                     },
                     "suppressFormatPainterCopy": true
                 },
               "fontSize": {
-                "displayName": "Text Size",
-                "displayNameKey": "Visual_TextSize",
                 "type": {
                   "formatting": {
                     "fontSize": true
@@ -169,8 +134,6 @@
                 }
               },
                "orientation": {
-                    "displayName": "Orientation",
-                    "displayNameKey": "Visual_Orientation",
                     "type": {
                       "enumeration": [
                         {
