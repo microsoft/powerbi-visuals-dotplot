@@ -573,7 +573,7 @@ export class DotPlot implements IVisual {
             this.events.renderingFinished(options);
         } catch (e) {
             console.error(e);
-            this.events.renderingFailed(options);
+            this.events.renderingFailed(options, e);
         }
     }
 
