@@ -92,7 +92,7 @@ import ClassAndSelector = CssConstants.ClassAndSelector;
 import createClassAndSelector = CssConstants.createClassAndSelector;
 
 // powerbi-visuals-utils-tooltiputils
-import { TooltipEventArgs, ITooltipServiceWrapper, createTooltipServiceWrapper } from "powerbi-visuals-utils-tooltiputils";
+import { ITooltipServiceWrapper, createTooltipServiceWrapper } from "powerbi-visuals-utils-tooltiputils";
 
 // powerbi-visuals-utils-colorutils
 import { ColorHelper } from "powerbi-visuals-utils-colorutils";
@@ -630,7 +630,7 @@ export class DotPlot implements IVisual {
             .attr("r", this.data.settings.dataPoint.radius.value.valueOf())
             .attr("fill", this.colorHelper.isHighContrast ? this.colorHelper.getThemeColor() : this.formattingSettings.dataPoint.fill.value.value);
 
-        this.renderTooltip(dotGroupSelection);
+        this.renderTooltip(dotGroupSelection.merge(newDotGroupSelection));
 
         circleSelection
             .exit()
@@ -720,9 +720,8 @@ export class DotPlot implements IVisual {
     private renderTooltip(selection: Selection<any, DotPlotDataGroup, any, any>): void {
         this.tooltipServiceWrapper.addTooltip(
             selection,
-            (tooltipEvent: TooltipEventArgs<DotPlotDataGroup>) => {
-                return tooltipEvent.data.tooltipInfo;
-            });
+            (dataPoint: DotPlotDataGroup) => dataPoint.tooltipInfo,
+            (dataPoint: DotPlotDataGroup) => dataPoint.identity);
     }
 
     private calculateAxes(): void {
