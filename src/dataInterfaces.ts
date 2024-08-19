@@ -31,12 +31,10 @@ import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
 
 import ISelectionId = powerbi.visuals.ISelectionId;
 
-import { interactivitySelectionService } from "powerbi-visuals-utils-interactivityutils";
-import SelectableDataPoint = interactivitySelectionService.SelectableDataPoint;
-
 import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
 import IDataLabelInfo = dataLabelInterfaces.IDataLabelInfo;
 import { DotPlotSettingsModel } from "./dotPlotSettingsModel";
+import { SelectableDataPoint } from "./behavior";
 
 export enum DotPlotLabelsOrientation {
     Horizontal = "Horizontal",

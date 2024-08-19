@@ -33,7 +33,6 @@ import powerbi from "powerbi-visuals-api";
 
 import { VisualLayout } from "./layout";
 import { DotplotBehavior, DotplotBehaviorOptions } from "./behavior";
-import { getOpacity } from "./utils";
 import { DotPlotData, DotPlotChartCategory, DotPlotDataGroup, DotPlotDataPoint, DotPlotLabelsOrientation } from "./dataInterfaces";
 import "../style/visual.less";
 
@@ -41,6 +40,7 @@ import IViewport = powerbi.IViewport;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
+import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import IColorPalette = powerbi.extensibility.IColorPalette;
@@ -68,12 +68,6 @@ import IValueFormatter = vf.IValueFormatter;
 
 // powerbi-visuals-utils-typeutils
 import { pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
-
-// powerbi-visuals-utils-interactivityutils
-import { interactivityBaseService, interactivitySelectionService } from "powerbi-visuals-utils-interactivityutils";
-import IInteractiveBehavior = interactivityBaseService.IInteractiveBehavior;
-import IInteractivityService = interactivityBaseService.IInteractivityService;
-import createInteractivityService = interactivitySelectionService.createInteractivitySelectionService;
 
 // powerbi-visuals-utils-chartutils
 import { axis, dataLabelUtils, dataLabelInterfaces, axisInterfaces, axisScale } from "powerbi-visuals-utils-chartutils";
@@ -209,7 +203,7 @@ export class DotPlot implements IVisual {
     private xAxisSelection: Selection<SVGGElement, unknown, HTMLDivElement, unknown>;
     private dotPlot: Selection<SVGGElement, unknown, HTMLDivElement, undefined>;
     private clearCatcher: Selection<SVGRectElement, unknown, HTMLDivElement, undefined>;
-    private behavior: IInteractiveBehavior;
+    private behavior: DotplotBehavior;
 
     private colorPalette: IColorPalette;
     private colorHelper: ColorHelper;
@@ -219,7 +213,6 @@ export class DotPlot implements IVisual {
     private dataViewport: IViewport;
     private xAxisProperties: IAxisProperties;
 
-    private interactivityService: IInteractivityService<DotPlotDataGroup>;
     private scaleType: string = AxisScale.linear;
 
     private strokeWidth: number = 1;
@@ -228,6 +221,7 @@ export class DotPlot implements IVisual {
     private visualHost: IVisualHost;
 
     private tooltipServiceWrapper: ITooltipServiceWrapper;
+    private selectionManager: ISelectionManager;
     private localizationManager: ILocalizationManager;
     private formattingSettingsService: FormattingSettingsService;
     private formattingSettings: DotPlotSettingsModel;
@@ -243,7 +237,6 @@ export class DotPlot implements IVisual {
         }];
     }
 
-    // eslint-disable-next-line max-lines-per-function
     public static converter(
         dataView: DataView,
         height: number,
@@ -252,14 +245,13 @@ export class DotPlot implements IVisual {
         localizationManager: ILocalizationManager,
         layout: VisualLayout
     ): DotPlotData {
-
         if (!dataView
             || !dataView.categorical
             || isEmpty(dataView.categorical.values)
             || isEmpty(dataView.categorical.categories)) {
-
             return null;
         }
+
         const categoryColumn: DataViewCategoryColumn = dataView.categorical.categories[0],
             valueColumn: DataViewValueColumn = dataView.categorical.values[0],
             valueValues: number[] = valueColumn.values.map((value: PrimitiveValue) => {
@@ -267,12 +259,6 @@ export class DotPlot implements IVisual {
 
                 return convertedValue || DotPlot.DefaultValue;
             }) as number[];
-
-        const highlightValues: (number | null)[] = valueColumn.highlights?.map((value: PrimitiveValue) => {
-            const convertedValue: number = Number(value);
-
-            return convertedValue || null;
-        }) || [];
 
         const minValue: number = min<number>(valueValues),
             maxValue: number = max<number>(valueValues);
@@ -349,20 +335,38 @@ export class DotPlot implements IVisual {
             .domain([DotPlot.MinAmountOfDots, maxDots])
             .range([dotsTotalHeight, DotPlot.MinAmountOfDots]);
 
-        const dataPointsGroup: DotPlotDataGroup[] = [],
-            minDots = minValue / (maxValue / maxDots),
-            additionalValue = minValue <= 1 ? -minValue + 1 : 0; // negative values scales incorrect
+        const minDots = minValue / (maxValue / maxDots);
+        const additionalValue = minValue <= 1 ? -minValue + 1 : 0; // negative values scales incorrect
 
         const dotScale: LogScale<number, number> = scaleLog()
             .domain(DotPlot.getDomain(minValue + additionalValue, maxValue + additionalValue))
             .range(DotPlot.getDomain(minDots > maxDots ? 1 : minDots, maxDots))
             .clamp(true);
 
+        const dataPointsGroup: DotPlotDataGroup[] = DotPlot.generateDotPlotDataGroup(valueValues, dotScale, additionalValue, valueColumn, maxDots, yScale, settings, localizationManager, visualHost, categoryColumn, categories, formattedValues, labelFontSize);
+
+        return {
+            categoryColumn,
+            settings,
+            maxXAxisHeight,
+            labelFontSize,
+            dotsTotalHeight,
+            maxLabelWidth,
+            maxLabelHeight,
+            maxCategoryWidth,
+            dataGroups: dataPointsGroup,
+            categoryAxisName: categoryColumn.source.displayName,
+            categoryLabelHeight: DotPlot.DefaultCategoryLabelHeight
+        };
+    }
+
+    private static generateDotPlotDataGroup(valueValues: number[], dotScale: LogScale<number, number, never>, additionalValue: number, valueColumn: powerbi.DataViewValueColumn, maxDots: number, yScale: LinearScale<number, number, never>, settings: DotPlotSettingsModel, localizationManager: ILocalizationManager, visualHost: IVisualHost, categoryColumn: powerbi.DataViewCategoryColumn, categories: DotPlotChartCategory[], formattedValues: string[], labelFontSize: number) {
+        const dataPointsGroup: DotPlotDataGroup[] = [];
         for (let index: number = 0, length: number = valueValues.length; index < length; index++) {
             const value: number = valueValues[index];
             const scaledValue: number = dotScale(value + additionalValue);
             const dataPoints: DotPlotDataPoint[] = [];
-            const hasHighlight: boolean = highlightValues[index] != null;
+            const hasHighlight: boolean = valueColumn.highlights && valueColumn.highlights[index] != null;
 
             for (let level: number = 0; level < scaledValue && maxDots > DotPlot.MinAmountOfDots; level++) {
                 dataPoints.push({
@@ -395,20 +399,7 @@ export class DotPlot implements IVisual {
                 labelFontSize: PixelConverter.toString(labelFontSize)
             });
         }
-
-        return {
-            categoryColumn,
-            settings,
-            maxXAxisHeight,
-            labelFontSize,
-            dotsTotalHeight,
-            maxLabelWidth,
-            maxLabelHeight,
-            maxCategoryWidth,
-            dataGroups: dataPointsGroup,
-            categoryAxisName: categoryColumn.source.displayName,
-            categoryLabelHeight: DotPlot.DefaultCategoryLabelHeight
-        };
+        return dataPointsGroup;
     }
 
     private get hasHighlight(): boolean {
@@ -437,16 +428,17 @@ export class DotPlot implements IVisual {
     private init(options: VisualConstructorOptions): void {
         this.events = options.host.eventService;
 
-        this.behavior = new DotplotBehavior();
 
         this.visualHost = options.host as IVisualHost;
 
         this.tooltipServiceWrapper = createTooltipServiceWrapper(
             this.visualHost.tooltipService,
             options.element);
+        this.selectionManager = this.visualHost.createSelectionManager();
         this.localizationManager = this.visualHost.createLocalizationManager();
         this.formattingSettingsService = new FormattingSettingsService(this.localizationManager);
-        this.interactivityService = createInteractivityService(this.visualHost);
+
+        this.behavior = new DotplotBehavior(this.selectionManager);
 
         this.colorPalette = this.visualHost.colorPalette;
         this.colorHelper = new ColorHelper(this.colorPalette);
@@ -528,15 +520,21 @@ export class DotPlot implements IVisual {
                 .style("width", PixelConverter.toString(this.layout.viewport.width))
                 .style("height", PixelConverter.toString(this.layout.viewport.height));
 
-            if (this.interactivityService) {
-                this.interactivityService.applySelectionStateToData(this.data.dataGroups);
-            }
 
             this.calculateAxes();
 
             this.renderAxis(this.durationAnimations);
 
-            this.drawDotPlot();
+            const dotGroupSelection = this.drawDotPlot();
+
+            const behaviorOptions: DotplotBehaviorOptions = {
+                columns: dotGroupSelection,
+                clearCatcher: this.clearCatcher,
+                isHighContrastMode: this.colorHelper.isHighContrast,
+                dataPoints: this.data.dataGroups,
+                hasHighlights: this.hasHighlight,
+            };
+            this.behavior.bindEvents(behaviorOptions);
 
             if (this.formattingSettings.labels.show.value) {
                 const layout: ILabelLayout = this.getDotPlotLabelsLayout();
@@ -590,13 +588,10 @@ export class DotPlot implements IVisual {
     }
 
 
-    private drawDotPlot(): void {
+    private drawDotPlot(): Selection<any, DotPlotDataGroup, any, any> {
         const dotGroupSelection: Selection<any, DotPlotDataGroup, any, any> = this.dotPlot
             .selectAll(DotPlot.PlotGroupSelector.selectorName)
             .data(this.data.dataGroups);
-
-            const hasSelection: boolean = this.interactivityService
-            && this.interactivityService.hasSelection();
 
         const newDotGroupSelection: Selection<any, DotPlotDataGroup, any, any> = dotGroupSelection
             .enter()
@@ -613,14 +608,7 @@ export class DotPlot implements IVisual {
                     this.layout.margin.top + this.data.labelFontSize + this.data.maxLabelHeight);
                 })
             .attr("stroke", (dataPoint: DotPlotDataGroup) => this.colorHelper.isHighContrast ? dataPoint.color : DotPlot.DotGroupStrokeColor)
-            .attr("stroke-width", this.strokeWidth)
-            .style("fill-opacity", (item: DotPlotDataGroup) => {
-                return getOpacity(
-                    item.selected,
-                    item.highlight,
-                    hasSelection,
-                    this.hasHighlight);
-            });
+            .attr("stroke-width", this.strokeWidth);
 
         const circleSelection: Selection<any, DotPlotDataPoint, any, any> = dotGroupSelection
             .merge(newDotGroupSelection)
@@ -648,21 +636,7 @@ export class DotPlot implements IVisual {
             .exit()
             .remove();
 
-        if (this.interactivityService) {
-            this.interactivityService.applySelectionStateToData(this.data.dataGroups);
-
-            const behaviorOptions: DotplotBehaviorOptions = {
-                columns: dotGroupSelection.merge(newDotGroupSelection),
-                clearCatcher: this.clearCatcher,
-                interactivityService: this.interactivityService,
-                isHighContrastMode: this.colorHelper.isHighContrast,
-                dataPoints: this.data.dataGroups,
-                behavior: this.behavior,
-                hasHighlight: this.hasHighlight,
-            };
-
-            this.interactivityService.bind(behaviorOptions);
-        }
+        return dotGroupSelection.merge(newDotGroupSelection);
     }
 
     private getXDotPositionByIndex(index: number): number {

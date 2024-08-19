@@ -29,96 +29,164 @@ import { DotPlotDataGroup } from "./dataInterfaces";
 
 // d3
 import { Selection } from "d3-selection";
+import powerbi from "powerbi-visuals-api";
+import ISelectionId = powerbi.visuals.ISelectionId;
+import ISelectionManager = powerbi.extensibility.ISelectionManager;
+import { LegendDataPoint } from "powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces";
 
-import { interactivityBaseService } from "powerbi-visuals-utils-interactivityutils";
-import ISelectionHandler = interactivityBaseService.ISelectionHandler;
-import IInteractiveBehavior = interactivityBaseService.IInteractiveBehavior;
-import IInteractivityService = interactivityBaseService.IInteractivityService;
-import { IBehaviorOptions } from "powerbi-visuals-utils-interactivityutils/lib/interactivityBaseService";
-
-export interface DotplotBehaviorOptions extends IBehaviorOptions<DotPlotDataGroup> {
-    columns: Selection<SVGGElement, DotPlotDataGroup, any, any>;
-    clearCatcher: Selection<any, any, any, any>;
-    interactivityService: IInteractivityService<DotPlotDataGroup>;
-    isHighContrastMode: boolean;
-    hasHighlight: boolean;
+export interface BaseDataPoint {
+    selected: boolean;
 }
 
-export class DotplotBehavior implements IInteractiveBehavior {
-    private columns: Selection<any, DotPlotDataGroup, any, any>;
+export interface SelectableDataPoint extends BaseDataPoint {
+    identity: ISelectionId;
+    specificIdentity?: ISelectionId;
+}
 
-    private clearCatcher: Selection<any, any, any, any>;
-    private interactivityService: IInteractivityService<DotPlotDataGroup>;
-    private isHighContrastMode: boolean;
-    private hasHighlight: boolean;
+export interface DotplotBehaviorOptions {
+    dataPoints: DotPlotDataGroup[];
+    columns: Selection<SVGGElement, DotPlotDataGroup, any, any>;
+    clearCatcher: Selection<any, any, any, any>;
+    isHighContrastMode: boolean;
+    hasHighlights: boolean;
+}
 
-    public bindEvents(
-        options: DotplotBehaviorOptions,
-        selectionHandler: ISelectionHandler): void {
+export class DotplotBehavior {
+    private selectionManager: ISelectionManager;
+    private options: DotplotBehaviorOptions;
 
-        this.columns = options.columns;
-        this.clearCatcher = options.clearCatcher;
-        this.interactivityService = options.interactivityService;
-        this.isHighContrastMode = options.isHighContrastMode;
-        this.hasHighlight = options.hasHighlight;
-
-        this.bindClickEvents(selectionHandler);
-        this.bindContextMenuEvents(selectionHandler);
-        this.bindKeyboardEvents(selectionHandler);
+    constructor(selectionManager: ISelectionManager) {
+        this.selectionManager = selectionManager;
+        this.selectionManager.registerOnSelectCallback(this.onSelectCallback.bind(this));
     }
 
-    private bindClickEvents(selectionHandler: ISelectionHandler): void {
-        this.columns.on("click", (event: MouseEvent, dataPoint: DotPlotDataGroup) => {
+    public get hasSelection(): boolean {
+        return this.selectionManager.hasSelection();
+    }
+
+    public get isInitialized(): boolean {
+        return !!this.options;
+    }
+
+    public bindEvents(options: DotplotBehaviorOptions): void {
+        this.options = options;
+
+        this.bindClickEvents();
+        this.bindContextMenuEvents();
+        this.bindKeyboardEvents();
+
+        this.onSelectCallback();
+    }
+
+    private bindClickEvents(): void {
+        this.options.columns.on("click", (event: MouseEvent, dataPoint: DotPlotDataGroup) => {
             event.stopPropagation();
-            selectionHandler.handleSelection(dataPoint, event.ctrlKey || event.shiftKey || event.metaKey);
+            this.selectDataPoint(dataPoint, event.ctrlKey || event.shiftKey || event.metaKey);
+            this.onSelectCallback();
         });
 
-        this.clearCatcher.on("click", () => {
-            selectionHandler.handleClearSelection();
+        this.options.clearCatcher.on("click", () => {
+            this.selectionManager.clear();
+            this.onSelectCallback();
         });
     }
 
-    private bindContextMenuEvents(selectionHandler: ISelectionHandler): void {
-        this.columns.on("contextmenu", (event: MouseEvent, dataPoint: DotPlotDataGroup) => {
+    private bindContextMenuEvents(): void {
+        this.options.columns.on("contextmenu", (event: MouseEvent, dataPoint: DotPlotDataGroup) => {
             event.preventDefault();
             event.stopPropagation();
-            selectionHandler.handleContextMenu(dataPoint, {
+            this.selectionManager.showContextMenu(dataPoint.identity, {
                 x: event.clientX,
                 y: event.clientY
             });
         });
 
-        this.clearCatcher.on("contextmenu", (event: MouseEvent) => {
+        this.options.clearCatcher.on("contextmenu", (event: MouseEvent) => {
             event.preventDefault();
-            selectionHandler.handleContextMenu(null, {
+            const emptySelection = {
+                "measures": [],
+                "dataMap": {
+                }
+            };
+            this.selectionManager.showContextMenu(emptySelection, {
                 x: event.clientX,
                 y: event.clientY
             });
         });
     }
 
-    private bindKeyboardEvents(selectionHandler: ISelectionHandler): void {
-        this.columns.on("keydown", (event: KeyboardEvent, dataPoint: DotPlotDataGroup) => {
+    private bindKeyboardEvents(): void {
+        this.options.columns.on("keydown", (event: KeyboardEvent, dataPoint: DotPlotDataGroup) => {
             if (event.code === "Enter" || event.code === "Space") {
                 event.preventDefault();
                 event.stopPropagation();
-                selectionHandler.handleSelection(dataPoint, event.ctrlKey || event.shiftKey || event.metaKey);
+                this.selectDataPoint(dataPoint, event.ctrlKey || event.shiftKey || event.metaKey);
+                this.onSelectCallback();
             }
         });
     }
 
-    public renderSelection(hasSelection: boolean): void {
-        const hasHighlights: boolean = this.hasHighlight;
+    private onSelectCallback(selectionIds?: ISelectionId[]): void {
+        const selectedIds: ISelectionId[] = selectionIds || <ISelectionId[]>this.selectionManager.getSelectionIds();
+        this.setSelectedToDataPoints(this.options.dataPoints, selectedIds);
+        this.renderSelection();
+    }
+
+    private setSelectedToDataPoints(dataPoints: SelectableDataPoint[] | LegendDataPoint[], ids?: ISelectionId[], hasHighlightsParameter?: boolean): void {
+        const hasHighlights: boolean = hasHighlightsParameter || (this.options && this.options.hasHighlights);
+        const selectedIds: ISelectionId[] = ids || <ISelectionId[]>this.selectionManager.getSelectionIds();
+
+        if (hasHighlights && this.hasSelection) {
+            this.selectionManager.clear();
+        }
+
+        for (const dataPoint of dataPoints) { 
+            dataPoint.selected = this.isDataPointSelected(dataPoint, selectedIds);
+        }
+    }
+
+    private selectDataPoint(dataPoint: SelectableDataPoint, multiSelect: boolean = false): void {
+        if (!dataPoint?.identity) return;
+
+        const selectedIds: ISelectionId[] = <ISelectionId[]>this.selectionManager.getSelectionIds();
+        const isSelected: boolean = this.isDataPointSelected(dataPoint, selectedIds);
+
+        const selectionIdsToSelect: ISelectionId[] = [];
+        if (!isSelected) {
+            dataPoint.selected = true;
+            selectionIdsToSelect.push(dataPoint.identity);
+        } else {
+            // toggle selected back to false
+            dataPoint.selected = false;
+            if (multiSelect) {
+                selectionIdsToSelect.push(dataPoint.identity);
+            }
+        }
+
+        if (selectionIdsToSelect.length > 0) {
+            this.selectionManager.select(selectionIdsToSelect, multiSelect);
+        } else {
+            this.selectionManager.clear();
+        }
+    }
+
+    private isDataPointSelected(dataPoint: SelectableDataPoint | LegendDataPoint, selectedIds: ISelectionId[]): boolean {
+        return selectedIds.some((value: ISelectionId) => value.equals(<ISelectionId>dataPoint.identity));
+    }
+
+    private renderSelection(): void {
+        const hasSelection: boolean = this.hasSelection;
+        const hasHighlights: boolean = this.options.hasHighlights;
 
         this.changeAttributeOpacity("fill-opacity", hasSelection, hasHighlights);
 
-        if (this.isHighContrastMode) {
+        if (this.options.isHighContrastMode) {
             this.changeAttributeOpacity("stroke-opacity", hasSelection, hasHighlights);
         }
     }
 
     private changeAttributeOpacity(attributeName: string, hasSelection: boolean, hasHighlights: boolean): void {
-        this.columns.style(attributeName, (dataPoint: DotPlotDataGroup) => {
+        this.options.columns.style(attributeName, (dataPoint: DotPlotDataGroup) => {
             return getOpacity(
                 dataPoint.selected,
                 dataPoint.highlight,

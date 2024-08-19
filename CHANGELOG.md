@@ -11,6 +11,7 @@
 * Split d3 into submodules
 * Remove jquery
 * Migrate to new formatting pane
+* Remove interactivity-utils
 
 ## 2.0.1
 * Fixed bug with styles import
