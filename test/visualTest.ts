@@ -27,14 +27,17 @@
 // <reference path="_references.ts"/>
 import { last, uniq } from "lodash";
 import powerbi from "powerbi-visuals-api";
+import PrimitiveValue = powerbi.PrimitiveValue;
 import DataView = powerbi.DataView;
 
 import { DotPlotData } from "./visualData";
 import { DotPlotBuilder } from "./visualBuilder";
 
-import { assertColorsMatch, ClickEventType } from "powerbi-visuals-utils-testutils";
+import { assertColorsMatch } from "powerbi-visuals-utils-testutils";
 
 import { isColorAppliedToElements, getSolidColorStructuralObject } from "./helpers/helpers";
+import { select } from "d3-selection";
+import { DotPlotDataGroup } from "../src/dataInterfaces";
 
 describe("DotPlot", () => {
     let visualBuilder: DotPlotBuilder,
@@ -102,19 +105,57 @@ describe("DotPlot", () => {
             expect(visualBuilder.mainElement.getBoundingClientRect().width).toBe(0);
         });
 
-        it("multi-selection test", () => {
+        it("selection test", (done) => {
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+            const firstGroup = visualBuilder.dotGroups[0];
+            const datum: DotPlotDataGroup = select(firstGroup).datum() as DotPlotDataGroup;
+
+            firstGroup.dispatchEvent(new MouseEvent("click"));
+
+            expect(parseFloat(firstGroup.style.fillOpacity)).toBe(1);
+            expect(datum.selected).toBe(true);
+
+            done();
+        });
+
+        it("multi-selection test", (done) => {
             visualBuilder.updateFlushAllD3Transitions(dataView);
 
             const firstGroup = visualBuilder.dotGroups[0];
             const secondGroup = visualBuilder.dotGroups[1];
-            const thirdGroup = visualBuilder.dotGroups[2];
 
             firstGroup?.dispatchEvent(new MouseEvent("click"));
-            secondGroup?.dispatchEvent(new MouseEvent("click", { ctrlKey: true}));
+            secondGroup?.dispatchEvent(new MouseEvent("click", { ctrlKey: true }));
 
             expect(parseFloat(firstGroup.style.fillOpacity)).toBe(1);
             expect(parseFloat(secondGroup.style.fillOpacity)).toBe(1);
-            expect(parseFloat(thirdGroup.style.fillOpacity)).toBeLessThan(1);
+            expect((select(firstGroup).datum() as DotPlotDataGroup).selected).toBe(true);
+            expect((select(secondGroup).datum() as DotPlotDataGroup).selected).toBe(true);
+
+            for (let i = 2; i < visualBuilder.dotGroups.length; i++) {
+                expect(parseFloat(visualBuilder.dotGroups[i].style.fillOpacity)).toBeLessThan(1);
+                expect((select(visualBuilder.dotGroups[i]).datum() as DotPlotDataGroup).selected).toBe(false);
+            }
+
+            done();
+        });
+
+        it("highlight test", (done) => {
+            dataView.categorical!.values![0].highlights = <PrimitiveValue[]>dataView.categorical!.values![0].values.map((value, i) => i === 0 ? value : null);
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const firstGroup = visualBuilder.dotGroups[0];
+            const datum = select(firstGroup).datum() as DotPlotDataGroup;
+
+            expect(datum.highlight).toBe(true);
+            expect(parseFloat(firstGroup.style.fillOpacity)).toBe(1);
+
+            for (let i = 1; i < visualBuilder.dotGroups.length; i++) {
+                expect((select(visualBuilder.dotGroups[i]).datum() as DotPlotDataGroup).highlight).toBe(false);
+                expect(parseFloat(visualBuilder.dotGroups[i].style.fillOpacity)).toBeLessThan(1);
+            }
+
+            done();
         });
     });
 
