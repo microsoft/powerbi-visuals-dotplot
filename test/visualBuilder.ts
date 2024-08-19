@@ -45,6 +45,10 @@ export class DotPlotBuilder extends VisualBuilderBase<VisualClass> {
         return this.element.querySelector("svg.dotplot")!;
     }
 
+    public get clearCatcher(): SVGRectElement {
+        return this.mainElement.querySelector("rect.clearCatcher")!;
+    }
+
     public get labels(): SVGGElement | null {
         return this.mainElement.querySelector("g.labels") || null;
     }

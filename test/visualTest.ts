@@ -118,6 +118,22 @@ describe("DotPlot", () => {
             done();
         });
 
+        it("dot group should not be selected on double click", (done) => {
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+            const firstGroup = visualBuilder.dotGroups[0];
+            const datum: DotPlotDataGroup = select(firstGroup).datum() as DotPlotDataGroup;
+
+            firstGroup.dispatchEvent(new MouseEvent("click"));
+
+            expect(datum.selected).toBe(true);
+
+            firstGroup.dispatchEvent(new MouseEvent("click"));
+
+            expect(datum.selected).toBe(false);
+
+            done();
+        });
+
         it("multi-selection test", (done) => {
             visualBuilder.updateFlushAllD3Transitions(dataView);
 
@@ -156,6 +172,86 @@ describe("DotPlot", () => {
             }
 
             done();
+        });
+
+        it("dot group is selected on 'Enter' keydown", (done) => {
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const firstGroup = visualBuilder.dotGroups[0];
+            const datum = select(firstGroup).datum() as DotPlotDataGroup;
+
+            firstGroup.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter" }));
+
+            expect(datum.selected).toBe(true);
+            expect(parseFloat(firstGroup.style.fillOpacity)).toBe(1);
+
+            done();
+        });
+
+        it("dot group is selected on 'Space' keydown", (done) => {
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const firstGroup = visualBuilder.dotGroups[0];
+            const datum = select(firstGroup).datum() as DotPlotDataGroup;
+
+            firstGroup.dispatchEvent(new KeyboardEvent("keydown", { code: "Space" }));
+
+            expect(datum.selected).toBe(true);
+            expect(parseFloat(firstGroup.style.fillOpacity)).toBe(1);
+
+            done();
+        });
+
+        it("dot group should not be selected on double 'Enter' keydown", (done) => {
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const firstGroup = visualBuilder.dotGroups[0];
+            const datum = select(firstGroup).datum() as DotPlotDataGroup;
+
+            firstGroup.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter" }));
+
+            expect(datum.selected).toBe(true);
+
+            firstGroup.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter" }));
+
+            expect(datum.selected).toBe(false);
+
+            done();
+
+        })
+
+        it("dot groups are selected on multi-selection with Ctlr/Shift/Meta keys", (done) => {
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            testKeydownEventWithModifierKey(new KeyboardEvent("keydown", { code: "Enter", ctrlKey: true }));
+            testKeydownEventWithModifierKey(new KeyboardEvent("keydown", { code: "Enter", shiftKey: true }));
+            testKeydownEventWithModifierKey(new KeyboardEvent("keydown", { code: "Enter", metaKey: true }));
+
+            done();
+
+            function testKeydownEventWithModifierKey(secondKeydownEvent: KeyboardEvent) {
+                const firstGroup = visualBuilder.dotGroups[0];
+                const secondGroup = visualBuilder.dotGroups[1];
+                const firstDatum = select(firstGroup).datum() as DotPlotDataGroup;
+                const secondDatum = select(secondGroup).datum() as DotPlotDataGroup;
+
+                firstGroup.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter" }));
+                secondGroup.dispatchEvent(secondKeydownEvent);
+
+                expect(firstDatum.selected).toBe(true);
+                expect(secondDatum.selected).toBe(true);
+
+                expect(parseFloat(firstGroup.style.fillOpacity)).toBe(1);
+                expect(parseFloat(secondGroup.style.fillOpacity)).toBe(1);
+
+                for (let i = 2; i < visualBuilder.dotGroups.length; i++) {
+                    const datum = select(visualBuilder.dotGroups[i]).datum() as DotPlotDataGroup;
+                    expect(datum.selected).toBe(false);
+                    expect(parseFloat(visualBuilder.dotGroups[i].style.fillOpacity)).toBeLessThan(1);
+                }
+
+                visualBuilder.clearCatcher.dispatchEvent(new MouseEvent("click"));
+            }
         });
     });
 
