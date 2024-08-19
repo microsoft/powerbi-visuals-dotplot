@@ -247,8 +247,6 @@ export class DotPlot implements IVisual {
     public static converter(
         dataView: DataView,
         height: number,
-        colors: IColorPalette,
-        colorHelper: ColorHelper,
         visualHost: IVisualHost,
         settings: DotPlotSettingsModel,
         localizationManager: ILocalizationManager,
@@ -269,6 +267,12 @@ export class DotPlot implements IVisual {
 
                 return convertedValue || DotPlot.DefaultValue;
             }) as number[];
+
+        const highlightValues: (number | null)[] = valueColumn.highlights?.map((value: PrimitiveValue) => {
+            const convertedValue: number = Number(value);
+
+            return convertedValue || null;
+        }) || [];
 
         const minValue: number = min<number>(valueValues),
             maxValue: number = max<number>(valueValues);
@@ -355,9 +359,10 @@ export class DotPlot implements IVisual {
             .clamp(true);
 
         for (let index: number = 0, length: number = valueValues.length; index < length; index++) {
-            const value: number = valueValues[index],
-                scaledValue: number = dotScale(value + additionalValue),
-                dataPoints: DotPlotDataPoint[] = [];
+            const value: number = valueValues[index];
+            const scaledValue: number = dotScale(value + additionalValue);
+            const dataPoints: DotPlotDataPoint[] = [];
+            const hasHighlight: boolean = highlightValues[index] != null;
 
             for (let level: number = 0; level < scaledValue && maxDots > DotPlot.MinAmountOfDots; level++) {
                 dataPoints.push({
@@ -385,7 +390,7 @@ export class DotPlot implements IVisual {
                 label: formattedValues[index],
                 identity: categorySelectionId,
                 selected: false,
-                highlight: false,
+                highlight: hasHighlight,
                 index: dataPointsGroup.length,
                 labelFontSize: PixelConverter.toString(labelFontSize)
             });
@@ -404,6 +409,11 @@ export class DotPlot implements IVisual {
             categoryAxisName: categoryColumn.source.displayName,
             categoryLabelHeight: DotPlot.DefaultCategoryLabelHeight
         };
+    }
+
+    private get hasHighlight(): boolean {
+        const hasHighlight: boolean = this.data.dataGroups.some((dataGroup: DotPlotDataGroup) => dataGroup.highlight);
+        return hasHighlight;
     }
 
     private static getDomain(min: number, max: number): number[] {
@@ -488,8 +498,6 @@ export class DotPlot implements IVisual {
             const data: DotPlotData = DotPlot.converter(
                 dataView,
                 this.layout.viewportIn.height,
-                this.colorPalette,
-                this.colorHelper,
                 this.visualHost,
                 this.formattingSettings,
                 this.localizationManager,
@@ -611,7 +619,7 @@ export class DotPlot implements IVisual {
                     item.selected,
                     item.highlight,
                     hasSelection,
-                    false);
+                    this.hasHighlight);
             });
 
         const circleSelection: Selection<any, DotPlotDataPoint, any, any> = dotGroupSelection
@@ -649,7 +657,8 @@ export class DotPlot implements IVisual {
                 interactivityService: this.interactivityService,
                 isHighContrastMode: this.colorHelper.isHighContrast,
                 dataPoints: this.data.dataGroups,
-                behavior: this.behavior
+                behavior: this.behavior,
+                hasHighlight: this.hasHighlight,
             };
 
             this.interactivityService.bind(behaviorOptions);

@@ -1,12 +1,16 @@
 ## 2.1.0
+### Visual changes
+* Add report page tooltips
+* Add keyboard navigation and context menu support
+* Enable the support multiple visual selection feature
+* Add highlight support
+
+### Code improvements
 * Update API to 5.11.0, tools to 5.5.1 and other packages
 * Migrate from tslint to eslint, from puppeteer to playwright-chromium
 * Split d3 into submodules
 * Remove jquery
 * Migrate to new formatting pane
-* Add report page tooltips
-* Add keyboard navigation and context menu support
-* Enable the support multiple visual selection feature
 
 ## 2.0.1
 * Fixed bug with styles import

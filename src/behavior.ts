@@ -41,6 +41,7 @@ export interface DotplotBehaviorOptions extends IBehaviorOptions<DotPlotDataGrou
     clearCatcher: Selection<any, any, any, any>;
     interactivityService: IInteractivityService<DotPlotDataGroup>;
     isHighContrastMode: boolean;
+    hasHighlight: boolean;
 }
 
 export class DotplotBehavior implements IInteractiveBehavior {
@@ -49,6 +50,7 @@ export class DotplotBehavior implements IInteractiveBehavior {
     private clearCatcher: Selection<any, any, any, any>;
     private interactivityService: IInteractivityService<DotPlotDataGroup>;
     private isHighContrastMode: boolean;
+    private hasHighlight: boolean;
 
     public bindEvents(
         options: DotplotBehaviorOptions,
@@ -58,6 +60,7 @@ export class DotplotBehavior implements IInteractiveBehavior {
         this.clearCatcher = options.clearCatcher;
         this.interactivityService = options.interactivityService;
         this.isHighContrastMode = options.isHighContrastMode;
+        this.hasHighlight = options.hasHighlight;
 
         this.bindClickEvents(selectionHandler);
         this.bindContextMenuEvents(selectionHandler);
@@ -105,7 +108,7 @@ export class DotplotBehavior implements IInteractiveBehavior {
     }
 
     public renderSelection(hasSelection: boolean): void {
-        const hasHighlights: boolean = this.interactivityService.hasSelection();
+        const hasHighlights: boolean = this.hasHighlight;
 
         this.changeAttributeOpacity("fill-opacity", hasSelection, hasHighlights);
 

@@ -183,6 +183,7 @@
             "tooltips"
         ]
     },
+    "supportsHighlight": true,
     "supportsKeyboardFocus": true,
     "supportsMultiVisualSelection": true,
     "privileges": []
