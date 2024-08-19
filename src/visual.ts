@@ -40,6 +40,7 @@ import IViewport = powerbi.IViewport;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
+import ITooltipService = powerbi.extensibility.ITooltipService;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
@@ -220,6 +221,7 @@ export class DotPlot implements IVisual {
 
     private visualHost: IVisualHost;
 
+    private tooltipService: ITooltipService;
     private tooltipServiceWrapper: ITooltipServiceWrapper;
     private selectionManager: ISelectionManager;
     private localizationManager: ILocalizationManager;
@@ -431,9 +433,11 @@ export class DotPlot implements IVisual {
 
         this.visualHost = options.host as IVisualHost;
 
+        this.tooltipService = this.visualHost.tooltipService;
         this.tooltipServiceWrapper = createTooltipServiceWrapper(
             this.visualHost.tooltipService,
             options.element);
+
         this.selectionManager = this.visualHost.createSelectionManager();
         this.localizationManager = this.visualHost.createLocalizationManager();
         this.formattingSettingsService = new FormattingSettingsService(this.localizationManager);
@@ -533,6 +537,8 @@ export class DotPlot implements IVisual {
                 isHighContrastMode: this.colorHelper.isHighContrast,
                 dataPoints: this.data.dataGroups,
                 hasHighlights: this.hasHighlight,
+                tooltipService: this.tooltipService,
+                getTooltipInfo: (dataPoint: DotPlotDataGroup) => dataPoint.tooltipInfo,
             };
             this.behavior.bindEvents(behaviorOptions);
 

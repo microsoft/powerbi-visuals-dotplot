@@ -2,6 +2,7 @@
 ### Visual changes
 * Add report page tooltips
 * Add keyboard navigation and context menu support
+* Show tooltip on keyboard focus
 * Enable the support multiple visual selection feature
 * Add highlight support
 

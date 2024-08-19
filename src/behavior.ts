@@ -32,6 +32,8 @@ import { Selection } from "d3-selection";
 import powerbi from "powerbi-visuals-api";
 import ISelectionId = powerbi.visuals.ISelectionId;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
+import ITooltipService = powerbi.extensibility.ITooltipService;
+import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import { LegendDataPoint } from "powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces";
 
 export interface BaseDataPoint {
@@ -49,6 +51,8 @@ export interface DotplotBehaviorOptions {
     clearCatcher: Selection<any, any, any, any>;
     isHighContrastMode: boolean;
     hasHighlights: boolean;
+    tooltipService: ITooltipService;
+    getTooltipInfo: (dataPoint?: DotPlotDataGroup) => VisualTooltipDataItem[]
 }
 
 export class DotplotBehavior {
@@ -122,8 +126,21 @@ export class DotplotBehavior {
                 event.stopPropagation();
                 this.selectDataPoint(dataPoint, event.ctrlKey || event.shiftKey || event.metaKey);
                 this.onSelectCallback();
+
+                this.showTooltip(dataPoint, <SVGGElement>event.target);
+            } else {
+                this.options.tooltipService.hide({ immediately: true, isTouchEvent: false });
             }
         });
+    }
+
+    private showTooltip(dataPoint: DotPlotDataGroup, domElement: SVGGElement): void {
+        const rect = domElement.getBoundingClientRect();
+
+        const tooltipInfo = this.options.getTooltipInfo(dataPoint);
+        const coordinates = [rect.left + rect.width / 2 + window.scrollX, rect.top + rect.height / 2 + window.scrollY];
+
+        this.options.tooltipService.show({ dataItems: tooltipInfo, coordinates: coordinates, identities: [dataPoint.identity], isTouchEvent: false });
     }
 
     private onSelectCallback(selectionIds?: ISelectionId[]): void {
