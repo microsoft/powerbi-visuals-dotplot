@@ -54,7 +54,6 @@
     "@types/lodash": "^4.17.7",
     "@types/webpack": "^5.28.5",
     "@typescript-eslint/eslint-plugin": "^8.1.0",
-    "coveralls": "^3.1.1",
     "eslint": "^8.57.0",
     "eslint-plugin-powerbi-visuals": "^0.8.1",
     "jasmine": "^5.2.0",

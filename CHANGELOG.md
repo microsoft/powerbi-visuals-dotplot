@@ -13,6 +13,7 @@
 * Remove jquery
 * Migrate to new formatting pane
 * Remove interactivity-utils
+* Remove "coveralls" package
 
 ## 2.0.1
 * Fixed bug with styles import
