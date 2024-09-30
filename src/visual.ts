@@ -63,9 +63,9 @@ import { ScaleLogarithmic as LogScale, ScaleLinear as LinearScale, ScaleOrdinal 
 import ISelectionId = powerbi.visuals.ISelectionId;
 
 // powerbi-visuals-utils-formattingutils
-import { valueFormatter as vf, textMeasurementService } from "powerbi-visuals-utils-formattingutils";
+import { valueFormatter, textMeasurementService } from "powerbi-visuals-utils-formattingutils";
 import { TextProperties } from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
-import IValueFormatter = vf.IValueFormatter;
+import IValueFormatter = valueFormatter.IValueFormatter;
 
 // powerbi-visuals-utils-typeutils
 import { pixelConverter as PixelConverter } from "powerbi-visuals-utils-typeutils";
@@ -265,16 +265,16 @@ export class DotPlot implements IVisual {
         const minValue: number = min<number>(valueValues),
             maxValue: number = max<number>(valueValues);
 
-        const valuesFormatter: IValueFormatter = vf.create({
-            format: vf.getFormatStringByColumn(valueColumn.source),
-            precision: settings.labels.labelPrecision.value.valueOf(),
+        const valuesFormatter: IValueFormatter = valueFormatter.create({
+            format: valueFormatter.getFormatStringByColumn(valueColumn.source),
+            precision: settings.labels.labelPrecision.value,
             value: settings.labels.labelDisplayUnits.value.valueOf() || maxValue
         });
 
         const formattedValues: string[] = valueValues.map(valuesFormatter.format);
 
-        const categoriesFormatter: IValueFormatter = vf.create({
-            format: vf.getFormatStringByColumn(categoryColumn.source)
+        const categoriesFormatter: IValueFormatter = valueFormatter.create({
+            format: valueFormatter.getFormatStringByColumn(categoryColumn.source)
         });
 
         const categories: DotPlotChartCategory[] = categoryColumn.values
@@ -290,7 +290,7 @@ export class DotPlot implements IVisual {
                 };
             });
 
-        const labelFontSize: number = PixelConverter.fromPointToPixel(settings.labels.font.fontSize.value.valueOf());
+        const labelFontSize: number = PixelConverter.fromPointToPixel(settings.labels.font.fontSize.value);
 
         const maxXAxisHeight: number =
             (settings.categoryAxis.show.value
@@ -326,7 +326,7 @@ export class DotPlot implements IVisual {
             ? maxLabelWidth
             : 0;
 
-        const radius: number = settings.dataPoint.radius.value.valueOf();
+        const radius: number = settings.dataPoint.radius.value;
 
         const diameter: number = DotPlot.RadiusFactor * radius + DotPlot.ExtraDiameter,
             dotsTotalHeight: number = height - maxXAxisHeight
@@ -374,7 +374,7 @@ export class DotPlot implements IVisual {
                 dataPoints.push({
                     y: yScale(level),
                     tooltipInfo: DotPlot.getTooltipData(value
-                        .toFixed(settings.labels.labelPrecision.value.valueOf())
+                        .toFixed(settings.labels.labelPrecision.value)
                         .toString(), localizationManager)
                 });
             }
@@ -385,7 +385,7 @@ export class DotPlot implements IVisual {
                 .createSelectionId();
 
             const tooltipInfo: VisualTooltipDataItem[] = DotPlot.getTooltipData(
-                value.toFixed(settings.labels.labelPrecision.value.valueOf()), localizationManager);
+                value.toFixed(settings.labels.labelPrecision.value), localizationManager);
 
             dataPointsGroup.push({
                 value,
@@ -459,7 +459,7 @@ export class DotPlot implements IVisual {
 
         this.clearCatcher = appendClearCatcher(this.svg);
 
-        const axisGraphicsContext = this.svg
+        const axisGraphicsContext: Selection<SVGGElement, unknown, HTMLDivElement, undefined> = this.svg
             .append("g")
             .classed(DotPlot.AxisSelector.className, true);
 
@@ -594,12 +594,12 @@ export class DotPlot implements IVisual {
     }
 
 
-    private drawDotPlot(): Selection<any, DotPlotDataGroup, any, any> {
+    private drawDotPlot(): Selection<SVGGElement, DotPlotDataGroup, any, any> {
         const dotGroupSelection: Selection<any, DotPlotDataGroup, any, any> = this.dotPlot
             .selectAll(DotPlot.PlotGroupSelector.selectorName)
             .data(this.data.dataGroups);
 
-        const newDotGroupSelection: Selection<any, DotPlotDataGroup, any, any> = dotGroupSelection
+        const newDotGroupSelection: Selection<SVGGElement, DotPlotDataGroup, any, any> = dotGroupSelection
             .enter()
             .append("g")
             .classed(DotPlot.PlotGroupSelector.className, true);
@@ -629,7 +629,7 @@ export class DotPlot implements IVisual {
         circleSelection
             .merge(newCircleSelection)
             .attr("cy", (dataPoint: DotPlotDataPoint) => dataPoint.y)
-            .attr("r", this.data.settings.dataPoint.radius.value.valueOf())
+            .attr("r", this.data.settings.dataPoint.radius.value)
             .attr("fill", this.colorHelper.isHighContrast ? this.colorHelper.getThemeColor() : this.formattingSettings.dataPoint.fill.value.value);
 
         this.renderTooltip(dotGroupSelection.merge(newDotGroupSelection));
@@ -656,7 +656,7 @@ export class DotPlot implements IVisual {
             labelText: (dataGroup: DotPlotDataGroup) => {
                 return dataLabelUtils.getLabelFormattedText({
                     label: dataGroup.label,
-                    fontSize: this.formattingSettings.labels.font.fontSize.value.valueOf(),
+                    fontSize: this.formattingSettings.labels.font.fontSize.value,
                     maxWidth: this.dataViewport.width,
                 });
             },
@@ -669,7 +669,7 @@ export class DotPlot implements IVisual {
                 },
                 y: (dataGroup: DotPlotDataGroup) => {
                     const y: number = (isEmpty(dataGroup.dataPoints)
-                        ? this.data.dotsTotalHeight + this.data.settings.dataPoint.radius.value.valueOf() * DotPlot.RadiusFactor
+                        ? this.data.dotsTotalHeight + this.data.settings.dataPoint.radius.value * DotPlot.RadiusFactor
                         : last(dataGroup.dataPoints).y) + this.data.labelFontSize;
 
                     return y - dataGroup.size.height;
@@ -680,7 +680,7 @@ export class DotPlot implements IVisual {
                     && dataGroup.dataPoints
                     && this.layout.viewportIn.height
                     - this.data.maxXAxisHeight
-                    + this.data.settings.dataPoint.radius.value.valueOf() * DotPlot.RadiusFactor > this.data.labelFontSize);
+                    + this.data.settings.dataPoint.radius.value * DotPlot.RadiusFactor > this.data.labelFontSize);
             },
             style: {
                 "fill": this.formattingSettings.labels.color.value.value,
