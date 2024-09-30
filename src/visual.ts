@@ -527,7 +527,7 @@ export class DotPlot implements IVisual {
 
             this.calculateAxes();
 
-            this.renderAxis(this.durationAnimations);
+            this.renderAxis();
 
             const dotGroupSelection = this.drawDotPlot();
 
@@ -777,9 +777,8 @@ export class DotPlot implements IVisual {
         this.xAxisProperties = xAxisProperties;
     }
 
-    // TODO:// add animation duration
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private renderAxis(duration: number): void {
+    // TODO: add animation duration
+    private renderAxis(): void {
         const height: number = this.dataViewport.height - this.data.maxXAxisHeight;
 
         this.xAxisSelection.attr(
