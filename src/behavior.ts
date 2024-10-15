@@ -24,17 +24,17 @@
  *  THE SOFTWARE.
  */
 
-import { getOpacity } from "./utils";
-import { DotPlotDataGroup } from "./dataInterfaces";
-
-// d3
-import { Selection } from "d3-selection";
 import powerbi from "powerbi-visuals-api";
+import { LegendDataPoint } from "powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces";
+import { DotPlotDataGroup } from "./dataInterfaces";
+import { getOpacity } from "./utils";
+// d3
+import { Selection as d3Selection } from "d3-selection";
+
 import ISelectionId = powerbi.visuals.ISelectionId;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ITooltipService = powerbi.extensibility.ITooltipService;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
-import { LegendDataPoint } from "powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces";
 
 export interface BaseDataPoint {
     selected: boolean;
@@ -47,8 +47,8 @@ export interface SelectableDataPoint extends BaseDataPoint {
 
 export interface DotplotBehaviorOptions {
     dataPoints: DotPlotDataGroup[];
-    columns: Selection<SVGGElement, DotPlotDataGroup, any, any>;
-    clearCatcher: Selection<any, any, any, any>;
+    columns: d3Selection<SVGGElement, DotPlotDataGroup, any, any>;
+    clearCatcher: d3Selection<any, any, any, any>;
     isHighContrastMode: boolean;
     hasHighlights: boolean;
     tooltipService: ITooltipService;

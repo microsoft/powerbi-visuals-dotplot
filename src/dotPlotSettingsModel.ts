@@ -174,28 +174,4 @@ export class DotPlotSettingsModel extends Model {
             option.displayName = localizationManager.getDisplayName(option.displayName.toString())
         });
     }
-
-    public validateAndCorrectSettings(): void {
-        this.dataPoint.radius.value = getValidNumberInRange(
-            this.dataPoint.radius.value,
-            this.dataPoint.radius.options.minValue.value,
-            this.dataPoint.radius.options.maxValue.value
-        );
-
-        this.labels.labelPrecision.value = getValidNumberInRange(
-            this.labels.labelPrecision.value,
-            this.labels.labelPrecision.options.minValue.value,
-            this.labels.labelPrecision.options.maxValue.value
-        );
-    }
-}
-
-function getValidNumberInRange(value: number, min: number, max: number) {
-    if (value < min) {
-        return min;
-    } else if (value > max) {
-        return max;
-    }
-
-    return value;
 }

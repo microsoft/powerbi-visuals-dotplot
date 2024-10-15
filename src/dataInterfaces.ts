@@ -25,18 +25,16 @@
  */
 
 import powerbi from "powerbi-visuals-api";
+import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
+import { SelectableDataPoint } from "./behavior";
+import { DotPlotSettingsModel } from "./dotPlotSettingsModel";
 
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
-
 import ISelectionId = powerbi.visuals.ISelectionId;
-
-import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
 import IDataLabelInfo = dataLabelInterfaces.IDataLabelInfo;
-import { DotPlotSettingsModel } from "./dotPlotSettingsModel";
-import { SelectableDataPoint } from "./behavior";
 
-export enum DotPlotLabelsOrientation {
+export const enum DotPlotLabelsOrientation {
     Horizontal = "Horizontal",
     Vertical = "Vertical",
 }

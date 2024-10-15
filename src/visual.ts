@@ -268,7 +268,7 @@ export class DotPlot implements IVisual {
         const valuesFormatter: IValueFormatter = valueFormatter.create({
             format: valueFormatter.getFormatStringByColumn(valueColumn.source),
             precision: settings.labels.labelPrecision.value,
-            value: settings.labels.labelDisplayUnits.value.valueOf() || maxValue
+            value: <number>settings.labels.labelDisplayUnits.value || maxValue
         });
 
         const formattedValues: string[] = valueValues.map(valuesFormatter.format);
@@ -487,7 +487,6 @@ export class DotPlot implements IVisual {
             this.layout.viewport = options.viewport;
 
             this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(DotPlotSettingsModel, dataView);
-            this.formattingSettings.validateAndCorrectSettings();
             this.formattingSettings.setLocalizedOptions(this.localizationManager);
             this.setHighContrastMode(this.colorHelper);
 
@@ -777,7 +776,6 @@ export class DotPlot implements IVisual {
         this.xAxisProperties = xAxisProperties;
     }
 
-    // TODO: add animation duration
     private renderAxis(): void {
         const height: number = this.dataViewport.height - this.data.maxXAxisHeight;
 
