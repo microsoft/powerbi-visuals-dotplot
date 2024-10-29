@@ -4,7 +4,6 @@
 * Add keyboard navigation and context menu support
 * Show tooltip on keyboard focus
 * Enable the support multiple visual selection feature
-* Add highlight support
 
 ### Code improvements
 * Update API to 5.11.0, tools to 5.5.1 and other packages
