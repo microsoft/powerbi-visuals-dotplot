@@ -238,19 +238,16 @@ export class DotPlot implements IVisual {
         labelOrientation: DotPlotLabelsOrientation.Horizontal
     };
 
-    private static getTooltipData(value: string, localizationManager: ILocalizationManager): VisualTooltipDataItem[] {
+    private getTooltipData(value: string): VisualTooltipDataItem[] {
         return [{
-            displayName: localizationManager.getDisplayName(ValueText),
+            displayName: this.localizationManager.getDisplayName(ValueText),
             value: value
         }];
     }
 
-    public static converter(
+    public converter(
         dataView: DataView,
         height: number,
-        visualHost: IVisualHost,
-        settings: DotPlotSettingsModel,
-        localizationManager: ILocalizationManager,
         layout: VisualLayout
     ): DotPlotData {
         if (!dataView
@@ -273,8 +270,8 @@ export class DotPlot implements IVisual {
 
         const valuesFormatter: IValueFormatter = valueFormatter.create({
             format: valueFormatter.getFormatStringByColumn(valueColumn.source),
-            precision: settings.labels.labelPrecision.value,
-            value: <number>settings.labels.labelDisplayUnits.value || maxValue
+            precision: this.formattingSettings.labels.labelPrecision.value,
+            value: <number>this.formattingSettings.labels.labelDisplayUnits.value || maxValue
         });
 
         const formattedValues: string[] = valueValues.map(valuesFormatter.format);
@@ -285,7 +282,7 @@ export class DotPlot implements IVisual {
 
         const categories: DotPlotChartCategory[] = categoryColumn.values
             .map((value: PrimitiveValue, index: number) => {
-                const selectionId: ISelectionId = visualHost
+                const selectionId: ISelectionId = this.visualHost
                     .createSelectionIdBuilder()
                     .withCategory(categoryColumn, index)
                     .createSelectionId();
@@ -296,14 +293,14 @@ export class DotPlot implements IVisual {
                 };
             });
 
-        const labelFontSize: number = PixelConverter.fromPointToPixel(settings.labels.font.fontSize.value);
+        const labelFontSize: number = PixelConverter.fromPointToPixel(this.formattingSettings.labels.font.fontSize.value);
 
         const maxXAxisHeight: number =
-            (settings.categoryAxis.show.value
+            (this.formattingSettings.categoryAxis.show.value
                 ? DotPlot.DefaultCategoryAxisHeight
                 : DotPlot.MinCategoryAxisHeight)
             +
-            (settings.categoryAxis.showAxisTitle.value
+            (this.formattingSettings.categoryAxis.showAxisTitle.value
                 ? DotPlot.DefaultCategoryLabelHeight
                 : DotPlot.MinCategoryLabelHeight);
 
@@ -328,16 +325,15 @@ export class DotPlot implements IVisual {
                     labelFontSize))
             * DotPlot.LabelWidthFactor);
 
-        const maxLabelHeight: number = settings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical
+        const maxLabelHeight: number = this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical
             ? maxLabelWidth
             : 0;
 
-        const radius: number = settings.dataPoint.radius.value;
+        const radius: number = this.formattingSettings.dataPoint.radius.value;
 
-        const diameter: number = DotPlot.RadiusFactor * radius + DotPlot.ExtraDiameter,
-            dotsTotalHeight: number = height - maxXAxisHeight
-                - radius * DotPlot.RadiusFactor - labelFontSize - layout.margin.top - maxLabelHeight,
-            maxDots: number = Math.floor(dotsTotalHeight / diameter);
+        const diameter: number = DotPlot.RadiusFactor * radius + DotPlot.ExtraDiameter;
+        const dotsTotalHeight: number = height - maxXAxisHeight - radius * DotPlot.RadiusFactor - labelFontSize - layout.margin.top - maxLabelHeight;
+        const maxDots: number = Math.floor(dotsTotalHeight / diameter);
 
         const yScale: d3LinearScale<number, number> = d3ScaleLinear()
             .domain([DotPlot.MinAmountOfDots, maxDots])
@@ -351,11 +347,11 @@ export class DotPlot implements IVisual {
             .range(DotPlot.getDomain(minDots > maxDots ? 1 : minDots, maxDots))
             .clamp(true);
 
-        const dataPointsGroup: DotPlotDataGroup[] = DotPlot.generateDotPlotDataGroup(valueValues, dotScale, additionalValue, valueColumn, maxDots, yScale, settings, localizationManager, visualHost, categoryColumn, categories, formattedValues, labelFontSize);
+        const dataPointsGroup: DotPlotDataGroup[] = this.generateDotPlotDataGroup({ valueValues, dotScale, additionalValue, valueColumn, maxDots, yScale, categoryColumn, categories, formattedValues, labelFontSize });
 
         return {
             categoryColumn,
-            settings,
+            settings: this.formattingSettings,
             maxXAxisHeight,
             labelFontSize,
             dotsTotalHeight,
@@ -368,7 +364,29 @@ export class DotPlot implements IVisual {
         };
     }
 
-    private static generateDotPlotDataGroup(valueValues: number[], dotScale: d3LogScale<number, number, never>, additionalValue: number, valueColumn: powerbi.DataViewValueColumn, maxDots: number, yScale: d3LinearScale<number, number, never>, settings: DotPlotSettingsModel, localizationManager: ILocalizationManager, visualHost: IVisualHost, categoryColumn: powerbi.DataViewCategoryColumn, categories: DotPlotChartCategory[], formattedValues: string[], labelFontSize: number) {
+    private generateDotPlotDataGroup({
+        valueValues,
+        dotScale,
+        additionalValue,
+        valueColumn,
+        maxDots,
+        yScale,
+        categoryColumn,
+        categories,
+        formattedValues,
+        labelFontSize
+    }: {
+        valueValues: number[];
+        dotScale: d3LogScale<number, number, never>;
+        additionalValue: number;
+        valueColumn: powerbi.DataViewValueColumn;
+        maxDots: number;
+        yScale: d3LinearScale<number, number, never>;
+        categoryColumn: powerbi.DataViewCategoryColumn;
+        categories: DotPlotChartCategory[];
+        formattedValues: string[];
+        labelFontSize: number;
+    }) {
         const dataPointsGroup: DotPlotDataGroup[] = [];
         for (let index: number = 0, length: number = valueValues.length; index < length; index++) {
             const value: number = valueValues[index];
@@ -379,25 +397,25 @@ export class DotPlot implements IVisual {
             for (let level: number = 0; level < scaledValue && maxDots > DotPlot.MinAmountOfDots; level++) {
                 dataPoints.push({
                     y: yScale(level),
-                    tooltipInfo: DotPlot.getTooltipData(value
-                        .toFixed(settings.labels.labelPrecision.value)
-                        .toString(), localizationManager)
+                    tooltipInfo: this.getTooltipData(value
+                        .toFixed(this.formattingSettings.labels.labelPrecision.value)
+                        .toString())
                 });
             }
 
-            const categorySelectionId: ISelectionId = visualHost
+            const categorySelectionId: ISelectionId = this.visualHost
                 .createSelectionIdBuilder()
                 .withCategory(categoryColumn, index)
                 .createSelectionId();
 
-            const tooltipInfo: VisualTooltipDataItem[] = DotPlot.getTooltipData(
-                value.toFixed(settings.labels.labelPrecision.value), localizationManager);
+            const tooltipInfo: VisualTooltipDataItem[] = this.getTooltipData(
+                value.toFixed(this.formattingSettings.labels.labelPrecision.value));
 
             dataPointsGroup.push({
                 value,
                 dataPoints,
                 tooltipInfo,
-                color: settings.dataPoint.fill.value.value,
+                color: this.formattingSettings.dataPoint.fill.value.value,
                 category: categories[index],
                 label: formattedValues[index],
                 identity: categorySelectionId,
@@ -496,12 +514,9 @@ export class DotPlot implements IVisual {
             this.formattingSettings.setLocalizedOptions(this.localizationManager);
             this.setHighContrastMode(this.colorHelper);
 
-            const data: DotPlotData = DotPlot.converter(
+            const data: DotPlotData = this.converter(
                 dataView,
                 this.layout.viewportIn.height,
-                this.visualHost,
-                this.formattingSettings,
-                this.localizationManager,
                 this.layout
             );
 
