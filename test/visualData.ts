@@ -83,6 +83,6 @@ export class DotPlotData extends TestDataViewBuilder {
                     values: this.valuesValue
                 }
             ],
-            columnNames).build();
+            <any>columnNames).build();
     }
 }
