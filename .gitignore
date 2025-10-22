@@ -7,3 +7,6 @@ typings
 *.log
 /coverage
 webpack.statistics.*
+
+## VSCode
+.vscode/

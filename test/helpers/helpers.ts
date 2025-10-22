@@ -32,12 +32,12 @@ export function getSolidColorStructuralObject(color: string): any {
 }
 
 export function isColorAppliedToElements(
-    elements: JQuery[],
+    elements: SVGCircleElement[],
     color?: string,
     colorStyleName: string = "fill"
 ): boolean {
-    return elements.some((element: JQuery) => {
-        const currentColor: string = element.css(colorStyleName);
+    return elements.some((element: SVGCircleElement) => {
+        const currentColor: string = element.style[colorStyleName];
         if (!currentColor || !color) {
             return currentColor === color;
         }

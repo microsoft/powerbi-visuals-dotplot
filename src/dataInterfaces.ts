@@ -25,23 +25,18 @@
  */
 
 import powerbi from "powerbi-visuals-api";
+import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
+import { SelectableDataPoint } from "./behavior";
+import { DotPlotSettingsModel } from "./dotPlotSettingsModel";
 
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
-
-import { DotPlotSettings } from "./settings";
-
 import ISelectionId = powerbi.visuals.ISelectionId;
-
-import { interactivityService } from "powerbi-visuals-utils-interactivityutils";
-import SelectableDataPoint = interactivityService.SelectableDataPoint;
-
-import { dataLabelInterfaces } from "powerbi-visuals-utils-chartutils";
 import IDataLabelInfo = dataLabelInterfaces.IDataLabelInfo;
 
-export enum DotPlotLabelsOrientation {
-    Horizontal = <any>"Horizontal",
-    Vertical = <any>"Vertical",
+export const enum DotPlotLabelsOrientation {
+    Horizontal = "Horizontal",
+    Vertical = "Vertical",
 }
 
 export interface DotPlotChartCategory {
@@ -54,9 +49,7 @@ export interface DotPlotDataPoint {
     tooltipInfo: VisualTooltipDataItem[];
 }
 
-export interface DotPlotDataGroup extends
-    SelectableDataPoint,
-    IDataLabelInfo {
+export interface DotPlotDataGroup extends SelectableDataPoint, IDataLabelInfo {
     label: string;
     value: number;
     category: DotPlotChartCategory;
@@ -70,7 +63,7 @@ export interface DotPlotDataGroup extends
 
 export interface DotPlotData {
     dataGroups: DotPlotDataGroup[];
-    settings: DotPlotSettings;
+    settings: DotPlotSettingsModel;
     categoryAxisName: string;
     maxXAxisHeight: number;
     categoryLabelHeight: number;

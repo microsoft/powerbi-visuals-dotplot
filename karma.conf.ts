@@ -38,25 +38,28 @@ const srcCssRecursivePath = ".tmp/drop/visual.css";
 const srcOriginalRecursivePath = "src/**/*.ts";
 const coverageFolder = "coverage";
 
-process.env.CHROME_BIN = require("puppeteer").executablePath();
+process.env.CHROME_BIN = require("playwright-chromium").chromium.executablePath();
 
 module.exports = (config) => {
     config.set({
         browserNoActivityTimeout: 100000,
         browsers: ["ChromeHeadless"],
+        customLaunchers: {
+            ChromeDebugging: {
+                base: "ChromeHeadless",
+                flags: ["--remote-debugging-port=9333"]
+            }
+        },
+        singleRun: true,
         colors: true,
-        frameworks: ["jasmine"],
+        frameworks: ["jasmine", "webpack"],
         reporters: [
             "progress",
             "coverage",
-            "karma-remap-istanbul"
         ],
-        singleRun: true,
         files: [
             srcCssRecursivePath,
             testRecursivePath,
-            "node_modules/jquery/dist/jquery.min.js",
-            "node_modules/jasmine-jquery/lib/jasmine-jquery.js",
             {
                 pattern: "./capabilities.json",
                 watched: false,
@@ -74,13 +77,6 @@ module.exports = (config) => {
         },
         typescriptPreprocessor: {
             options: tsconfig.compilerOptions,
-        },
-        remapIstanbulReporter: {
-            reports: {
-                lcovonly: coverageFolder + "/lcov.info",
-                html: coverageFolder,
-                "text-summary": null
-            }
         },
         coverageReporter: {
             dir: coverageFolder,
