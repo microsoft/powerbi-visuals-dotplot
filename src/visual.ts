@@ -25,9 +25,8 @@
  *  THE SOFTWARE.
  */
 
-import { isEmpty } from "lodash/lang";
-import { min, max } from "lodash/math";
-import { last } from "lodash/array";
+import { isEmpty } from "./utils";
+
 
 import powerbi from "powerbi-visuals-api";
 
@@ -265,8 +264,8 @@ export class DotPlot implements IVisual {
                 return convertedValue || DotPlot.DefaultValue;
             }) as number[];
 
-        const minValue: number = min<number>(valueValues),
-            maxValue: number = max<number>(valueValues);
+        const minValue: number = Math.min(...valueValues),
+            maxValue: number = Math.max(...valueValues);
 
         const valuesFormatter: IValueFormatter = valueFormatter.create({
             format: valueFormatter.getFormatStringByColumn(valueColumn.source),
@@ -304,7 +303,7 @@ export class DotPlot implements IVisual {
                 ? DotPlot.DefaultCategoryLabelHeight
                 : DotPlot.MinCategoryLabelHeight);
 
-        const maxCategoryLength: number = max(categories.map((category: DotPlotChartCategory) => {
+        const maxCategoryLength: number = Math.max(...categories.map((category: DotPlotChartCategory) => {
             return category.value.length;
         }));
 
@@ -312,7 +311,7 @@ export class DotPlot implements IVisual {
             * textMeasurementService.measureSvgTextWidth(
                 DotPlot.getCategoryTextProperties(DotPlot.DefaultCategoryText));
 
-        const maxLabelLength: number = max(formattedValues.map((value: string) => {
+        const maxLabelLength: number = Math.max(...formattedValues.map((value: string) => {
             return value.length;
         })) || DotPlot.MinLabelLength;
 
@@ -564,14 +563,16 @@ export class DotPlot implements IVisual {
 
             if (this.formattingSettings.labels.show.value) {
                 const layout: ILabelLayout = this.getDotPlotLabelsLayout();
-
                 const labels: d3Selection<SVGTextElement, DotPlotDataGroup, SVGGElement, unknown> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
-                    this.data.dataGroups,
-                    this.svg,
-                    layout,
-                    this.dataViewport,
-                    false,
-                    this.durationAnimations);
+                    {
+                        data: this.data.dataGroups,
+                        context: this.svg,
+                        layout: layout,
+                        viewport: this.dataViewport,
+                        animationDuration: this.durationAnimations,
+                        hasSelection: false
+                    }
+                );
 
                 if (labels) {
                     labels.attr("transform", (dataGroup: DotPlotDataGroup) => {
@@ -632,7 +633,7 @@ export class DotPlot implements IVisual {
                 return translate(
                     this.getXDotPositionByIndex(dataPoint.index),
                     this.layout.margin.top + this.data.labelFontSize + this.data.maxLabelHeight);
-                })
+            })
             .attr("stroke", (dataPoint: DotPlotDataGroup) => this.colorHelper.isHighContrast ? dataPoint.color : DotPlot.DotGroupStrokeColor)
             .attr("stroke-width", this.strokeWidth);
 
@@ -690,7 +691,7 @@ export class DotPlot implements IVisual {
                 y: (dataGroup: DotPlotDataGroup) => {
                     const y: number = (isEmpty(dataGroup.dataPoints)
                         ? this.data.dotsTotalHeight + this.data.settings.dataPoint.radius.value * DotPlot.RadiusFactor
-                        : last(dataGroup.dataPoints).y) + this.data.labelFontSize;
+                        : (dataGroup.dataPoints)[dataGroup.dataPoints.length - 1].y) + this.data.labelFontSize;
 
                     return y - dataGroup.size.height;
                 }
@@ -806,7 +807,7 @@ export class DotPlot implements IVisual {
                 this.data.maxLabelWidth / DotPlot.MiddleLabelWidth,
                 height));
 
-        const xAxis: d3Axis<any> =  this.xAxisProperties.axis.tickFormat(function(d) { return d.x; });
+        const xAxis: d3Axis<any> = this.xAxisProperties.axis.tickFormat(function (d) { return d.x; });
 
         this.xAxisSelection
             .call(xAxis)
@@ -857,8 +858,8 @@ export class DotPlot implements IVisual {
 
                 .attr("class", DotPlot.XAxisLabelSelector.className)
                 .attr("transform", translate(
-                        this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
-                        this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset
+                    this.dataViewport.width / DotPlot.XAxisSeparator - titleWidth / DotPlot.XAxisSeparator,
+                    this.data.maxXAxisHeight - this.data.categoryLabelHeight + DotPlot.XAxisLabelOffset
                 ));
         }
     }
