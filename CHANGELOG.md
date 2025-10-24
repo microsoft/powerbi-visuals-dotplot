@@ -3,6 +3,7 @@
 * Removed loadash
 * Fixed audit issues
 * Updated packages 
+* Updated eslint config
 
 ## 2.1.0
 ### Visual changes
