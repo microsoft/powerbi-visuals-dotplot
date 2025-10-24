@@ -1,6 +1,6 @@
 ## 2.1.1
 ### Code improvements
-* Removed loadash
+* Removed lodash
 * Fixed audit issues
 * Updated packages 
 * Updated eslint config
