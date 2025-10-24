@@ -1,3 +1,9 @@
+## 2.1.1
+### Code improvements
+* Removed loadash
+* Fixed audit issues
+* Updated packages 
+
 ## 2.1.0
 ### Visual changes
 * Add report page tooltips
