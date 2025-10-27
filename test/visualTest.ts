@@ -25,7 +25,6 @@
  */
 
 // <reference path="_references.ts"/>
-import { last, uniq } from "lodash";
 import powerbi from "powerbi-visuals-api";
 import PrimitiveValue = powerbi.PrimitiveValue;
 import DataView = powerbi.DataView;
@@ -93,7 +92,7 @@ describe("DotPlot", () => {
                 const groupsRects = Array.from(visualBuilder.dotGroups)
                     .map((element: SVGGElement) => element.getBoundingClientRect());
 
-                expect(uniq(groupsRects.map(x => x.left)).length).toEqual(groupsRects.length);
+                expect([... new Set(groupsRects.map(x => x.left))].length).toEqual(groupsRects.length);
 
                 done();
             });
@@ -412,7 +411,7 @@ describe("DotPlot", () => {
 
                 visualBuilder.dataLabels
                     .forEach((element: SVGTextElement) => {
-                        expect(last(element.textContent)).toEqual("K");
+                        expect(element.textContent[element.textContent.length - 1]).toEqual("K");
                     });
             });
 

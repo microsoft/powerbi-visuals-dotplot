@@ -39,3 +39,6 @@ export function getOpacity(
 
     return DefaultOpacity;
 }
+export function isEmpty(obj: any): boolean {
+    return [Object, Array].includes((obj || {}).constructor) && !Object.entries((obj || {})).length;
+}

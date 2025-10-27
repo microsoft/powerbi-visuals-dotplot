@@ -25,9 +25,6 @@
  */
 import powerbi from "powerbi-visuals-api";
 
-import { clone } from "lodash/lang";
-import { keys } from "lodash/object";
-
 import { IMargin } from "powerbi-visuals-utils-svgutils";
 
 import IViewport = powerbi.IViewport;
@@ -73,7 +70,7 @@ export class VisualLayout {
     }
 
     public get viewportCopy(): IViewport {
-        return clone(this.viewport);
+        return structuredClone(this.viewport);
     }
 
     public get viewportIn(): IViewport {
@@ -96,8 +93,8 @@ export class VisualLayout {
     }
 
     public set viewport(value: IViewport) {
-        this.previousOriginalViewportValue = clone(this.originalViewportValue);
-        this.originalViewportValue = clone(value);
+        this.previousOriginalViewportValue = structuredClone(this.originalViewportValue);
+        this.originalViewportValue = structuredClone(value);
 
         this.setUpdateObject(
             value,
@@ -122,7 +119,7 @@ export class VisualLayout {
     }
 
     private setUpdateObject<T>(object: T, setObjectFn: (T) => void, beforeUpdateFn?: (T) => void): void {
-        object = clone(object);
+        object = structuredClone(object);
         setObjectFn(VisualLayout.createNotifyChangedObject(object, () => {
             if (beforeUpdateFn) {
                 beforeUpdateFn(object);
@@ -141,7 +138,7 @@ export class VisualLayout {
     private static createNotifyChangedObject<T>(object: T, objectChanged: (o?: T, key?: string) => void): T {
         const result: T = {} as T;
 
-        keys(object).forEach((propertyName: string) => Object.defineProperty(result, propertyName, {
+        Object.keys(object).forEach((propertyName: string) => Object.defineProperty(result, propertyName, {
             get: () => object[propertyName],
             set: (value: any) => {
                 object[propertyName] = value;
@@ -155,7 +152,7 @@ export class VisualLayout {
     }
 
     private static restrictToMinMax<T>(value: T, minValue?: T): T {
-        keys(value).forEach((propertyName: string) => {
+        Object.keys(value).forEach((propertyName: string) => {
             value[propertyName] = Math.max(
                 minValue && minValue[propertyName] || VisualLayout.MinViewportSize,
                 value[propertyName]);

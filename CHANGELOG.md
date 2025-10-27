@@ -1,3 +1,10 @@
+## 2.1.1
+### Code improvements
+* Removed lodash
+* Fixed audit issues
+* Updated packages 
+* Updated eslint config
+
 ## 2.1.0
 ### Visual changes
 * Add report page tooltips
