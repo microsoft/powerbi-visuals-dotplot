@@ -42,7 +42,7 @@
     "powerbi-visuals-utils-svgutils": "^6.0.4",
     "powerbi-visuals-utils-tooltiputils": "^6.0.4",
     "powerbi-visuals-utils-typeutils": "^6.0.3",
-    "webpack": "^5.102.1",
+    "webpack": "^5.105.0",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.2"
   },
