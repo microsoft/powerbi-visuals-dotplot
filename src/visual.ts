@@ -311,18 +311,13 @@ export class DotPlot implements IVisual {
             * textMeasurementService.measureSvgTextWidth(
                 DotPlot.getCategoryTextProperties(DotPlot.DefaultCategoryText));
 
-        const maxLabelLength: number = Math.max(...formattedValues.map((value: string) => {
-            return value.length;
-        })) || DotPlot.MinLabelLength;
+        const longestLabel: string = formattedValues.reduce((prev, current) => (prev.length > current.length) ? prev : current, "");
 
         const maxLabelWidth: number = Math.max(
-            DotPlot.MaxLabelWidth,
-            maxLabelLength
-            * textMeasurementService.measureSvgTextWidth(
+            textMeasurementService.measureSvgTextWidth(
                 DotPlot.getCategoryTextProperties(
-                    "M",
-                    labelFontSize))
-            * DotPlot.LabelWidthFactor);
+                    longestLabel,
+                    labelFontSize)));
 
         const maxLabelHeight: number = this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical
             ? maxLabelWidth
@@ -562,7 +557,8 @@ export class DotPlot implements IVisual {
             this.behavior.bindEvents(behaviorOptions);
 
             if (this.formattingSettings.labels.show.value) {
-                const layout: ILabelLayout = this.getDotPlotLabelsLayout();
+                const isVertical = this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical;
+                const layout: ILabelLayout = this.getDotPlotLabelsLayout(isVertical ? "left" : "center");
                 const labels: d3Selection<SVGTextElement, DotPlotDataGroup, SVGGElement, unknown> = dataLabelUtils.drawDefaultLabelsForDataPointChart(
                     {
                         data: this.data.dataGroups,
@@ -570,27 +566,27 @@ export class DotPlot implements IVisual {
                         layout: layout,
                         viewport: this.dataViewport,
                         animationDuration: this.durationAnimations,
-                        hasSelection: false
+                        hasSelection: false,
+                        hideCollidedLabels: !isVertical,
                     }
                 );
 
                 if (labels) {
-                    labels.attr("transform", (dataGroup: DotPlotDataGroup) => {
-                        const size: ISize = dataGroup.size;
-                        if (data.settings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical) {
-                            const px: number = dataGroup.anchorPoint.x,
-                                py: number = dataGroup.anchorPoint.y,
-                                dx: number = size.width / DotPlot.DataLabelXOffset
-                                    + size.height * DotPlot.DataLabelXOffsetIndex,
-                                dy: number = size.height + size.height / DotPlot.DataLabelYOffset;
-                            return translateAndRotate(dx, -dy + this.data.maxLabelHeight - (DotPlot.MaxLabelWidth >= this.data.maxLabelHeight ? 0 : this.data.maxLabelHeight * DotPlot.verticalLabelMarginRatio), px, py, DotPlot.DataLabelAngle);
-                        } else {
-                            const dx: number = size.width / DotPlot.DataLabelXOffset,
-                                dy: number = size.height / DotPlot.DataLabelYOffset;
+                    labels
+                        .style("transform-box", "fill-box")
+                        .attr("transform", (dataGroup: DotPlotDataGroup) => {
+                            const size: ISize = dataGroup.size;
+                            if (isVertical) {
+                                const rotationOriginY: number = size.height / 2.0,
+                                    translateY: number = size.width;
+                                return translateAndRotate(0, translateY, 0, rotationOriginY, DotPlot.DataLabelAngle);
+                            } else {
+                                const dx: number = 0,
+                                    dy: number = -size.height / DotPlot.DataLabelYOffset;
 
-                            return translate(dx, dy);
-                        }
-                    });
+                                return translate(dx, dy);
+                            }
+                        });
 
                     labels
                         .style("font-family", this.formattingSettings.labels.font.fontFamily.value)
@@ -672,7 +668,7 @@ export class DotPlot implements IVisual {
         return this.data.maxLabelWidth / DotPlot.MiddleLabelWidth + scale(index);
     }
 
-    private getDotPlotLabelsLayout(): ILabelLayout {
+    private getDotPlotLabelsLayout(horizontalAlignment: "center" | "left"): ILabelLayout {
         return {
             labelText: (dataGroup: DotPlotDataGroup) => {
                 return dataLabelUtils.getLabelFormattedText({
@@ -683,17 +679,20 @@ export class DotPlot implements IVisual {
             },
             labelLayout: {
                 x: (dataGroup: DotPlotDataGroup) => {
-                    const x: number = this.getXDotPositionByIndex(dataGroup.index),
-                        dx: number = dataGroup.size.width / DotPlot.DataLabelXOffset;
+                    const x: number = this.getXDotPositionByIndex(dataGroup.index);
+                    if (horizontalAlignment === "center") {
+                        return x;
+                    }
+                    const dx: number = dataGroup.size.width / DotPlot.DataLabelXOffset;
 
-                    return x - dx;
+                    return x + dx;
                 },
                 y: (dataGroup: DotPlotDataGroup) => {
                     const y: number = (isEmpty(dataGroup.dataPoints)
                         ? this.data.dotsTotalHeight + this.data.settings.dataPoint.radius.value * DotPlot.RadiusFactor
                         : (dataGroup.dataPoints)[dataGroup.dataPoints.length - 1].y) + this.data.labelFontSize;
 
-                    return y - dataGroup.size.height;
+                    return y;
                 }
             },
             filter: (dataGroup: DotPlotDataGroup) => {
