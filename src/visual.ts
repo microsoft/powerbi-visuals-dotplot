@@ -313,11 +313,10 @@ export class DotPlot implements IVisual {
 
         const longestLabel: string = formattedValues.reduce((prev, current) => (prev.length > current.length) ? prev : current, "");
 
-        const maxLabelWidth: number = Math.max(
-            textMeasurementService.measureSvgTextWidth(
+        const maxLabelWidth: number = textMeasurementService.measureSvgTextWidth(
                 DotPlot.getCategoryTextProperties(
                     longestLabel,
-                    labelFontSize)));
+                    labelFontSize));
 
         const maxLabelHeight: number = this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical
             ? maxLabelWidth
