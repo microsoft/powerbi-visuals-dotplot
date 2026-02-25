@@ -448,7 +448,7 @@ describe("DotPlot", () => {
             orientations.forEach((orientation: DotPlotLabelsOrientation) => {
                 describe(`orientation: ${orientation}`, () => {
                     beforeEach(() => {
-                        (dataView.metadata.objects as any).labels.labelOrientation = orientation;
+                        (dataView.metadata.objects as any).labels.orientation = orientation;
                     });
 
                     radii.forEach((radius: number) => {
