@@ -442,6 +442,24 @@ describe("DotPlot", () => {
                         expect(element.style.fontSize).toBe(fontSizeInPt);
                     });
             });
+            
+            const radii: number[] = [1, 5, 10, 15];
+            radii.forEach((radius: number) => {
+                it(`should not overlap with dots with radius ${radius}`, () => {
+                    (dataView.metadata.objects as any).dataPoint = {
+                        radius
+                    };
+
+                    visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                    visualBuilder.dataLabels
+                        .forEach((element: SVGTextElement, index: number) => {
+                            const labelRect = element.getBoundingClientRect();
+                            const groupRect = visualBuilder.dotGroups[index].getBoundingClientRect();
+                        expect(labelRect.bottom).toBeLessThanOrEqual(groupRect.top);
+                    });
+                });
+            });
         });
     });
 
