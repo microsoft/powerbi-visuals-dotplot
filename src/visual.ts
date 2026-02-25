@@ -582,7 +582,7 @@ export class DotPlot implements IVisual {
                                 return translateAndRotate(0, translateY, 0, rotationOriginY, DotPlot.DataLabelAngle);
                             } else {
                                 const dx: number = 0,
-                                    dy: number = -size.height / DotPlot.DataLabelYOffset;
+                                    dy: number = size.height / DotPlot.DataLabelYOffset;
 
                                 return translate(dx, dy);
                             }
@@ -690,7 +690,7 @@ export class DotPlot implements IVisual {
                 y: (dataGroup: DotPlotDataGroup) => {
                     const y: number = (isEmpty(dataGroup.dataPoints)
                         ? this.data.dotsTotalHeight + this.data.settings.dataPoint.radius.value * DotPlot.RadiusFactor
-                        : (dataGroup.dataPoints)[dataGroup.dataPoints.length - 1].y) + this.data.labelFontSize;
+                        : (dataGroup.dataPoints)[dataGroup.dataPoints.length - 1].y);
 
                     return y;
                 }
