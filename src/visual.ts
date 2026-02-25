@@ -312,15 +312,18 @@ export class DotPlot implements IVisual {
                 DotPlot.getCategoryTextProperties(DotPlot.DefaultCategoryText));
 
         const longestLabel: string = formattedValues.reduce((prev, current) => (prev.length > current.length) ? prev : current, "");
+        const longestLabelWidth: number = textMeasurementService.measureSvgTextWidth(
+            DotPlot.getCategoryTextProperties(
+                longestLabel,
+                labelFontSize));
 
-        const maxLabelWidth: number = textMeasurementService.measureSvgTextWidth(
-                DotPlot.getCategoryTextProperties(
-                    longestLabel,
-                    labelFontSize));
+        const maxLabelWidth: number = !this.formattingSettings.labels.show.value || this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical
+            ? 0
+            : longestLabelWidth;
 
-        const maxLabelHeight: number = this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical
-            ? maxLabelWidth
-            : 0;
+        const maxLabelHeight: number = !this.formattingSettings.labels.show.value || this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Horizontal
+            ? 0
+            : longestLabelWidth;
 
         const radius: number = this.formattingSettings.dataPoint.radius.value;
 
