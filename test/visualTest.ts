@@ -36,7 +36,7 @@ import { assertColorsMatch } from "powerbi-visuals-utils-testutils";
 
 import { isColorAppliedToElements, getSolidColorStructuralObject } from "./helpers/helpers";
 import { select as d3Select } from "d3-selection";
-import { DotPlotDataGroup } from "../src/dataInterfaces";
+import { DotPlotDataGroup, DotPlotLabelsOrientation } from "../src/dataInterfaces";
 
 describe("DotPlot", () => {
     let visualBuilder: DotPlotBuilder,
@@ -442,21 +442,30 @@ describe("DotPlot", () => {
                         expect(element.style.fontSize).toBe(fontSizeInPt);
                     });
             });
-            
+
+            const orientations: DotPlotLabelsOrientation[] = [DotPlotLabelsOrientation.Horizontal, DotPlotLabelsOrientation.Vertical];
             const radii: number[] = [1, 5, 10, 15];
-            radii.forEach((radius: number) => {
-                it(`should not overlap with dots with radius ${radius}`, () => {
-                    (dataView.metadata.objects as any).dataPoint = {
-                        radius
-                    };
+            orientations.forEach((orientation: DotPlotLabelsOrientation) => {
+                describe(`orientation: ${orientation}`, () => {
+                    beforeEach(() => {
+                        (dataView.metadata.objects as any).labels.labelOrientation = orientation;
+                    });
 
-                    visualBuilder.updateFlushAllD3Transitions(dataView);
+                    radii.forEach((radius: number) => {
+                        it(`should not overlap with dots with dot radius ${radius}`, () => {
+                            (dataView.metadata.objects as any).dataPoint = {
+                                radius
+                            };
 
-                    visualBuilder.dataLabels
-                        .forEach((element: SVGTextElement, index: number) => {
-                            const labelRect = element.getBoundingClientRect();
-                            const groupRect = visualBuilder.dotGroups[index].getBoundingClientRect();
-                        expect(labelRect.bottom).toBeLessThanOrEqual(groupRect.top);
+                            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                            visualBuilder.dataLabels
+                                .forEach((element: SVGTextElement, index: number) => {
+                                    const labelRect = element.getBoundingClientRect();
+                                    const groupRect = visualBuilder.dotGroups[index].getBoundingClientRect();
+                                    expect(labelRect.bottom).toBeLessThanOrEqual(groupRect.top);
+                                });
+                        });
                     });
                 });
             });
