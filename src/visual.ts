@@ -311,13 +311,16 @@ export class DotPlot implements IVisual {
             * textMeasurementService.measureSvgTextWidth(
                 DotPlot.getCategoryTextProperties(DotPlot.DefaultCategoryText));
 
-        const longestLabelWidth: number = Math.max(
-            ...formattedValues.map((value) => textMeasurementService.measureSvgTextWidth(
-                DotPlot.getCategoryTextProperties(
-                    value,
-                    labelFontSize)
-            ))
-        );
+        const longestLabelWidth: number = !this.formattingSettings.labels.show.value
+            ? 0
+            : Math.max(
+                ...formattedValues.map((value) => textMeasurementService.measureSvgTextWidth(
+                    DotPlot.getCategoryTextProperties(
+                        value,
+                        labelFontSize)
+                )),
+                0
+            );
 
         const maxLabelWidth: number = !this.formattingSettings.labels.show.value || this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical
             ? 0
