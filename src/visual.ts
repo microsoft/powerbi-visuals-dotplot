@@ -326,11 +326,14 @@ export class DotPlot implements IVisual {
         const maxLabelHeight: number = !this.formattingSettings.labels.show.value || this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Horizontal
             ? 0
             : longestLabelWidth;
+        const labelOffset: number = !this.formattingSettings.labels.show.value
+            ? 0
+            : labelFontSize;
 
         const radius: number = this.formattingSettings.dataPoint.radius.value;
 
         const diameter: number = DotPlot.RadiusFactor * radius + DotPlot.ExtraDiameter;
-        const dotsTotalHeight: number = height - maxXAxisHeight - radius * DotPlot.RadiusFactor - labelFontSize - layout.margin.top - maxLabelHeight;
+        const dotsTotalHeight: number = height - maxXAxisHeight - radius * DotPlot.RadiusFactor - labelOffset - layout.margin.top - maxLabelHeight;
         const maxDots: number = Math.floor(dotsTotalHeight / diameter);
 
         const yScale: d3LinearScale<number, number> = d3ScaleLinear()
@@ -582,7 +585,7 @@ export class DotPlot implements IVisual {
                             const size: ISize = dataGroup.size;
                             if (isVertical) {
                                 const rotationOriginY: number = size.height / 2.0,
-                                    translateY: number = size.width;
+                                    translateY: number = size.width + size.height / 2.0;
                                 return translateAndRotate(0, translateY, 0, rotationOriginY, DotPlot.DataLabelAngle);
                             } else {
                                 const dx: number = 0,
@@ -630,9 +633,10 @@ export class DotPlot implements IVisual {
             .attr("focusable", true)
             .attr("tabindex", 0)
             .attr("transform", (dataPoint: DotPlotDataGroup) => {
+                const labelOffset: number = this.formattingSettings.labels.show.value ? this.data.labelFontSize : 0;
                 return translate(
                     this.getXDotPositionByIndex(dataPoint.index),
-                    this.layout.margin.top + this.data.labelFontSize + this.data.maxLabelHeight);
+                    this.layout.margin.top + this.data.maxLabelHeight + labelOffset);
             })
             .attr("stroke", (dataPoint: DotPlotDataGroup) => this.colorHelper.isHighContrast ? dataPoint.color : DotPlot.DotGroupStrokeColor)
             .attr("stroke-width", this.strokeWidth);
