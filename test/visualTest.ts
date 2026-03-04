@@ -445,26 +445,34 @@ describe("DotPlot", () => {
 
             const orientations: DotPlotLabelsOrientation[] = [DotPlotLabelsOrientation.Horizontal, DotPlotLabelsOrientation.Vertical];
             const radii: number[] = [1, 5, 10, 15];
+            const fontSize: number[] = [8, 12, 16];
             orientations.forEach((orientation: DotPlotLabelsOrientation) => {
-                describe(`orientation: ${orientation}`, () => {
+                describe(`${orientation} orientation`, () => {
                     beforeEach(() => {
                         (dataView.metadata.objects as any).labels.orientation = orientation;
                     });
 
-                    radii.forEach((radius: number) => {
-                        it(`should not overlap with dots with dot radius ${radius}`, () => {
-                            (dataView.metadata.objects as any).dataPoint = {
-                                radius
-                            };
+                    fontSize.forEach((labelFontSize: number) => {
+                        radii.forEach((radius: number) => {
+                            it(`with font size ${labelFontSize} should not overlap with dots with dot radius ${radius}`, () => {
+                                (dataView.metadata.objects as any).dataPoint = {
+                                    radius
+                                };
+                                (dataView.metadata.objects as any).labels.fontSize = labelFontSize;
 
-                            visualBuilder.updateFlushAllD3Transitions(dataView);
+                                visualBuilder.updateFlushAllD3Transitions(dataView);
 
-                            visualBuilder.dataLabels
-                                .forEach((element: SVGTextElement, index: number) => {
-                                    const labelRect = element.getBoundingClientRect();
-                                    const groupRect = visualBuilder.dotGroups[index].getBoundingClientRect();
-                                    expect(labelRect.bottom).toBeLessThanOrEqual(groupRect.top);
-                                });
+                                const labels = visualBuilder.dataLabels;
+                                expect(labels.length).toBeGreaterThan(0); // ensures forEach actually runs
+
+                                labels
+                                    .forEach((element: SVGTextElement) => {
+                                        const datum = d3Select(element).datum() as DotPlotDataGroup;
+                                        const labelRect = element.getBoundingClientRect();
+                                        const groupRect = visualBuilder.dotGroups[datum.index].getBoundingClientRect();
+                                        expect(labelRect.bottom).toBeLessThanOrEqual(groupRect.top);
+                                    });
+                            });
                         });
                     });
                 });
