@@ -127,9 +127,6 @@ export class DotPlot implements IVisual {
     private static DataLabelYOffset: number = 1.5;
 
     private static DataLabelAngle: number = -90;
-    private static DataLabelXOffsetIndex: number = 0.3;
-
-    private static DefaultStrokeWidth: number = 1;
 
     private static DefaultFontSize: number = 11;
     private static DefaultFontFamily: string = "helvetica,arial,sans-serif";
@@ -143,11 +140,6 @@ export class DotPlot implements IVisual {
     private static DefaultCategoryLabelHeight: number = 15;
 
     private static DefaultCategoryText: string = "W";
-
-    private static MaxLabelWidth: number = 50;
-
-    private static DefaultLabelText: string = "0";
-    private static LabelWidthFactor: number = 0.8;
 
     private static RadiusFactor: number = 2;
     private static ExtraDiameter: number = 1;
@@ -177,8 +169,6 @@ export class DotPlot implements IVisual {
     private static DefaultTickValue: string = "";
 
     private static TextAnchor: string = "middle";
-
-    private static MinLabelLength: number = 0;
 
     private static Margin: IMargin = {
         top: 5,
