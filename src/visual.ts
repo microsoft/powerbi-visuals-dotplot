@@ -316,8 +316,8 @@ export class DotPlot implements IVisual {
                 DotPlot.getCategoryTextProperties(
                     value,
                     labelFontSize)
-                ))
-            );
+            ))
+        );
 
         const maxLabelWidth: number = !this.formattingSettings.labels.show.value || this.formattingSettings.labels.orientation.value.value === DotPlotLabelsOrientation.Vertical
             ? 0
@@ -585,7 +585,7 @@ export class DotPlot implements IVisual {
                             const size: ISize = dataGroup.size;
                             if (isVertical) {
                                 const rotationOriginY: number = size.height / 2.0,
-                                    translateY: number = size.width + size.height / 2.0;
+                                    translateY: number = size.width + size.height / DotPlot.DataLabelYOffset - this.data.settings.dataPoint.radius.value;
                                 return translateAndRotate(0, translateY, 0, rotationOriginY, DotPlot.DataLabelAngle);
                             } else {
                                 const dx: number = 0,
