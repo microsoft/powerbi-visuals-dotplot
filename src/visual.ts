@@ -212,7 +212,6 @@ export class DotPlot implements IVisual {
     private scaleType: string = AxisScale.linear;
 
     private strokeWidth: number = 1;
-    private static verticalLabelMarginRatio: number = 0.2;
 
     private visualHost: IVisualHost;
 
