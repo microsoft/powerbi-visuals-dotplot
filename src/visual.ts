@@ -354,7 +354,8 @@ export class DotPlot implements IVisual {
             maxCategoryWidth,
             dataGroups: dataPointsGroup,
             categoryAxisName: categoryColumn.source.displayName,
-            categoryLabelHeight: DotPlot.DefaultCategoryLabelHeight
+            categoryLabelHeight: DotPlot.DefaultCategoryLabelHeight,
+            labelOffset,
         };
     }
 
@@ -630,10 +631,9 @@ export class DotPlot implements IVisual {
             .attr("focusable", true)
             .attr("tabindex", 0)
             .attr("transform", (dataPoint: DotPlotDataGroup) => {
-                const labelOffset: number = this.formattingSettings.labels.show.value ? this.data.labelFontSize : 0;
                 return translate(
                     this.getXDotPositionByIndex(dataPoint.index),
-                    this.layout.margin.top + this.data.maxLabelHeight + labelOffset);
+                    this.layout.margin.top + this.data.maxLabelHeight + this.data.labelOffset);
             })
             .attr("stroke", (dataPoint: DotPlotDataGroup) => this.colorHelper.isHighContrast ? dataPoint.color : DotPlot.DotGroupStrokeColor)
             .attr("stroke-width", this.strokeWidth);
