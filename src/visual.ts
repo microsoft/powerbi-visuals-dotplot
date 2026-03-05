@@ -573,6 +573,10 @@ export class DotPlot implements IVisual {
 
                 if (labels) {
                     labels
+                        // Required for correct label positioning. Without this, labels rotate
+                        // around SVG's (0, 0) point, which causes them to be positioned incorrectly.
+                        // With transform-box set to fill-box, labels rotate around their center,
+                        // which is the desired behavior.
                         .style("transform-box", "fill-box")
                         .attr("transform", (dataGroup: DotPlotDataGroup) => {
                             const size: ISize = dataGroup.size;
