@@ -1,3 +1,10 @@
+## 2.1.2
+* Fixed a bug where labels would vertically overlap dots if dot radius is >8px
+* Fixed a bug where a lot of vertical labels disappeared randomly
+* Made it so vertical chart labels take up less empty space
+* Fixed a bug where long vertical labels reduced chart's width
+* Fixed a bug where disabling labels would still leave space for them
+
 ## 2.1.1
 ### Code improvements
 * Removed lodash

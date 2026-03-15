@@ -73,5 +73,6 @@ export interface DotPlotData {
     maxLabelHeight: number;
     labelFontSize: number;
     maxCategoryWidth: number;
+    labelOffset: number;
 }
 
