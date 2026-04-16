@@ -775,24 +775,6 @@ export class DotPlot implements IVisual {
 
         xAxisProperties.axis.tickValues(tickValues);
 
-        const tickWidth: number = (tickValues.length > DotPlot.MinAmountOfTicks
-            ? scale(tickValues[1]) - scale(tickValues[0])
-            : pixelSpan) - DotPlot.TickWidthOffset;
-
-        xAxisProperties.axis.tickFormat((index: number) => {
-            if (!this.formattingSettings.categoryAxis.show.value || !this.data.dataGroups[index]) {
-                return DotPlot.DefaultTickValue;
-            }
-
-            const textProperties: TextProperties = DotPlot.getCategoryTextProperties(
-                this.data.dataGroups[index].category.value);
-
-            return textMeasurementService.getTailoredTextOrDefault(
-                textProperties,
-                tickWidth
-            );
-        });
-
         if (this.formattingSettings.categoryAxis.show.value) {
             // Should handle the label, units of the label and the axis style
             xAxisProperties.axisLabel = this.data.categoryAxisName;
@@ -825,10 +807,20 @@ export class DotPlot implements IVisual {
         }
 
         if (this.formattingSettings.categoryAxis.show.value) {
+            const pixelSpan: number = this.dataViewport.width - this.data.maxLabelWidth;
+            const scale: any = this.xAxisProperties.axis.scale();
+            const tickValues: any[] = this.xAxisProperties.axis.tickValues();
+            const tickWidth: number = (tickValues.length > DotPlot.MinAmountOfTicks
+                ? scale(tickValues[1]) - scale(tickValues[0])
+                : pixelSpan) - DotPlot.TickWidthOffset;
+
             this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
                 .text((index: number) => {
                     return this.data.dataGroups[index]
-                        && this.data.dataGroups[index].category.value;
+                        && textMeasurementService.getTailoredTextOrDefault(
+                            DotPlot.getCategoryTextProperties(this.data.dataGroups[index].category.value),
+                            tickWidth
+                        );
                 });
         } else {
             this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
