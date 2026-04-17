@@ -821,15 +821,15 @@ export class DotPlot implements IVisual {
                             DotPlot.getCategoryTextProperties(this.data.dataGroups[index].category.value),
                             tickWidth
                         );
-                });
-        } else {
-            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
-                .append("title")
-                .text((index: number) => {
-                    return this.data.dataGroups[index]
-                        && this.data.dataGroups[index].category.value;
-                });
+                })
         }
+
+        this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
+            .append("title")
+            .text((index: number) => {
+                return this.data.dataGroups[index]
+                    && this.data.dataGroups[index].category.value;
+            });
 
         this.xAxisSelection
             .selectAll("line")
