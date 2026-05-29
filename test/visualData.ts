@@ -38,13 +38,13 @@ export class DotPlotData extends TestDataViewBuilder {
     public static ColumnValues: string = "Value";
 
     public static ValuesCategoryLongNames: string[] = [
-        "Sir Demetrius",
-        "Sir Montgomery",
-        "Sir Remington",
-        "Sir Forrester",
-        "Sir Christopher",
-        "Miss Annabelle",
-        "Miss Emmaline"
+        "Very long label that should be truncated",
+        "Extremely long label that should be truncated",
+        "Quite a long label that should be truncated",
+        "Long label that should be truncated",
+        "Label that should be truncated",
+        "Short label",
+        "Label that should be truncated",
     ];
 
     public valuesCategory: string[] = [
