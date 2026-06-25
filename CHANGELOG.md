@@ -1,3 +1,7 @@
+## 2.1.3.0
+* Removed an unused `tooltips` data role reference from capabilities
+* Updated CI workflows (trigger on default branch, refreshed action versions, Node 20/22, npm cache, concurrency)
+
 ## 2.1.2
 * Fixed a bug where labels would vertically overlap dots if dot radius is >8px
 * Fixed a bug where a lot of vertical labels disappeared randomly

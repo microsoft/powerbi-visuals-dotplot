@@ -5,9 +5,16 @@ name: build
 
 on:
   push:
-    branches: [ main, dev, certification ]
+    branches: [ master, main, dev, certification ]
   pull_request:
-    branches: [ main, dev, certification ]
+    branches: [ master, main, dev, certification ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -16,14 +23,15 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 22.x]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: npm
     - run: npm ci
     - run: npm audit
       continue-on-error: true
