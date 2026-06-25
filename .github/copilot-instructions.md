@@ -16,7 +16,7 @@
 - **Linting, tests, CI**: scripts present; ESLint config; CI status present if `src/**` changed.
 - **Dependencies**: lockfile updated on dependency change; major version bumps flagged.
 - **Tests & localization**: unit tests reminder on logic changes; `stringResources/en-US/**` coverage; spellcheck.
-- **Documentation & changelog**: `changelog.md` on non-trivial changes; usage examples for public APIs.
+- **Documentation & changelog**: `CHANGELOG.md` on non-trivial changes; usage examples for public APIs.
 - **Code quality & architecture**: scope summary, performance & accessibility hints, state/event cleanup, error handling, maintainability notes.
 - **Reporting**: one-line summary counts; per-finding snippets; suggested fixes; auto-labels.
 
@@ -37,8 +37,10 @@
   - **Forbidden** (→ `error`, breaks settings mapping in users' existing reports): renaming or removing an existing object/property; changing the `type` of an existing property; renaming/removing existing `enumeration` values; renaming/removing `dataRoles` `name` or `dataViewMappings` bindings.
   - When in doubt, diff `capabilities.json` against the last released tag and confirm every change is an addition.
 - **`pbiviz.json`**:
-  - Version is 4-part `major.minor.patch.build`. Bump for functional changes: new feature → bump **minor** (2nd digit); bug fix → bump **patch** (3rd digit). `pbiviz.json` `visual.version`, `visual.displayName` (the `Mekko Chart x.y.z.w` suffix) and `package.json` `version` must all match.  
-  - `visual.guid`, `visual.displayName`, `author`, `supportUrl`, `apiVersion` present.  
+  - `visual.version` is 4-part `major.minor.patch.build`. Bump for functional changes: new feature → bump **minor** (2nd digit); bug fix → bump **patch** (3rd digit).
+  - **Version consistency**: `pbiviz.json` `visual.version` and `package.json` `version` must be **identical 4-part** strings, and `CHANGELOG.md` must have a matching 4-part entry. The repo is `private: true` (never published to npm), so the npm SemVer 3-part constraint does not apply — keep 4-part everywhere for consistency with Partner Center / AppSource, which requires the 4th `build` component.
+  - `visual.displayName` must **not** embed the version number (e.g. `Dot Plot`, not `Dot Plot 2.1.3.0`) — the version is technical metadata, not a user-facing part of the name.
+  - `visual.guid`, `visual.displayName`, `author`, `supportUrl`, `apiVersion` present.
   - `apiVersion` compatible with `@types/powerbi-visuals-api` (major alignment) → mismatch → `warning`.
 
 ### 2) Security & forbidden patterns (report file:line)
@@ -98,7 +100,7 @@
   - Exclude identifiers/acronyms/brand-names (use a repo spellcheck whitelist file if one exists).
 
 ### 8) Documentation & changelog
-- For non-trivial changes — update `changelog.md` → `info`/`warning`.
+- For non-trivial changes — update `CHANGELOG.md` → `info`/`warning`.
 - For new public APIs — add usage examples → `info`.
 
 ### 9) Code quality & architecture (senior review mindset)
@@ -110,7 +112,8 @@
   - Resource management: cleanup D3-selectors, event handlers, timers.
   - State/races/leaks; excessive coupling; duplication.
   - Power BI SDK/utilities compliance, formatting, API contracts.
-  - On-object formatting: sub-selection object names and `FormattingId` references (in `src/onObject/**`) must point to real `capabilities.json` objects/properties, and the formatting model (`src/settings.ts`) cards/slices must stay in sync with `capabilities.json`.
+  - On-object formatting (if implemented, e.g. under `src/onObject/**`): sub-selection object names and `FormattingId` references must point to real `capabilities.json` objects/properties.
+  - The formatting model (the `FormattingSettingsModel` class, e.g. `src/*SettingsModel.ts` or `src/settings.ts`) cards/slices must stay in sync with `capabilities.json` (object and property `name`s must match).
 
 ## Spellcheck Configuration
 
