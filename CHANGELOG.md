@@ -1,6 +1,8 @@
 ## 2.1.3.0
 * Removed an unused `tooltips` data role reference from capabilities
 * Updated CI workflows (trigger on default branch, refreshed action versions, Node 20/22, npm cache, concurrency)
+* Run Karma tests with `--no-sandbox` so the build passes on current Ubuntu runners
+* Switched code scanning to GitHub's built-in (default) CodeQL setup and removed the custom CodeQL workflow — broader coverage (JavaScript/TypeScript and GitHub Actions) with no maintenance cost
 
 ## 2.1.2
 * Fixed a bug where labels would vertically overlap dots if dot radius is >8px
