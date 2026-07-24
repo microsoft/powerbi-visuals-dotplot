@@ -547,6 +547,7 @@ export class DotPlot implements IVisual {
 
             const behaviorOptions: DotplotBehaviorOptions = {
                 columns: dotGroupSelection,
+                xAxisTicks: this.xAxisSelection.selectAll<SVGGElement, number>("g.tick"),
                 clearCatcher: this.clearCatcher,
                 isHighContrastMode: this.colorHelper.isHighContrast,
                 dataPoints: this.data.dataGroups,

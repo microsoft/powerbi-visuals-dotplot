@@ -99,6 +99,32 @@ describe("DotPlot", () => {
             });
         });
 
+        it("xAxis tick opens the Power BI context menu", () => {
+            visualBuilder = new DotPlotBuilder(300, 250);
+            const selectionManager = visualBuilder.visualHost.createSelectionManager();
+            const showContextMenuSpy = spyOn(selectionManager, "showContextMenu").and.callThrough();
+            const bubbledContextMenuSpy = jasmine.createSpy("bubbledContextMenu");
+            visualBuilder.element.addEventListener("contextmenu", bubbledContextMenuSpy);
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const tick: SVGGElement = visualBuilder.xAxisTicks[1];
+            const dataGroupIndex: number = d3Select(tick).datum() as number;
+            const expectedIdentity = (d3Select(visualBuilder.dotGroups[dataGroupIndex]).datum() as DotPlotDataGroup).identity;
+            const event = new MouseEvent("contextmenu", {
+                bubbles: true,
+                cancelable: true,
+                clientX: 25,
+                clientY: 50
+            });
+
+            const dispatchResult: boolean = tick.dispatchEvent(event);
+
+            expect(showContextMenuSpy).toHaveBeenCalledOnceWith(expectedIdentity, { x: 25, y: 50 });
+            expect(event.defaultPrevented).toBeTrue();
+            expect(dispatchResult).toBeFalse();
+            expect(bubbledContextMenuSpy).not.toHaveBeenCalled();
+        });
+
         it("should correctly render duplicates in categories", done => {
             dataView.categorical!.categories![0].values[1] =
                 dataView.categorical!.categories![0].values[0];
