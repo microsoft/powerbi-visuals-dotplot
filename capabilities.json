@@ -178,10 +178,7 @@
         "supportedTypes": {
             "default": true,
             "canvas": true
-        },
-        "roles": [
-            "tooltips"
-        ]
+        }
     },
     "supportsKeyboardFocus": true,
     "supportsMultiVisualSelection": true,

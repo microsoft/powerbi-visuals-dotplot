@@ -1,0 +1,167 @@
+# Agent-oriented Copilot instructions for PR checks
+
+**Purpose.** Keep only the checks and guidance that an automated coding agent (Copilot-style) can perform reliably during a PR review for a Power BI custom visual repository. Interactive/manual certification steps are out of scope here and are handled by human reviewers.
+
+**Context.** This repository contains a Microsoft custom visual for Power BI. All contributions must follow Microsoft coding standards and Power BI custom visual guidelines. The agent prioritizes checks that enforce those standards and flags deviations for human review.
+
+---
+
+## Summary of agent-capable checks (categories)
+
+- **PR metadata**: non-empty description; conventional commit title.
+- **Manifests & capabilities (Power BI)**: presence & schema sanity of `capabilities.json`, `pbiviz.json`, `package.json`, `tsconfig.json`, `src/visual.ts`; no `WebAccess`; version bump rules.
+- **Security & forbidden patterns**: unsafe DOM, dynamic scripts, timers-with-strings, `eval/new Function`, network APIs, unsafe bindings.
+- **Secrets scanning**: common tokens/keys; urgent human review.
+- **Build artifacts & minification & assets**: `.min.*` in `src/`, overly large or minified-looking files.
+- **Linting, tests, CI**: scripts present; ESLint config; CI status present if `src/**` changed.
+- **Dependencies**: lockfile updated on dependency change; major version bumps flagged.
+- **Tests & localization**: unit tests reminder on logic changes; `stringResources/en-US/**` coverage; spellcheck.
+- **Documentation & changelog**: `CHANGELOG.md` on non-trivial changes; usage examples for public APIs.
+- **Code quality & architecture**: scope summary, performance & accessibility hints, state/event cleanup, error handling, maintainability notes.
+- **Reporting**: one-line summary counts; per-finding snippets; suggested fixes; auto-labels.
+
+> Maintainers: thresholds, regexes and message templates are the **single source of truth** in this file to avoid divergence.
+
+---
+
+## Detailed rules
+
+### 1) Manifests & capabilities (Power BI)
+- **Presence**: `capabilities.json`, `pbiviz.json`, `package.json`, `tsconfig.json`, `src/visual.ts`.  
+  Missing → `error`.
+- **Capabilities**:
+  - No `WebAccess` or privileges that permit arbitrary network calls → `error`.
+  - `dataRoles` and `dataViewMappings` must be present → `error`.
+- **Backward compatibility of `capabilities.json` (persisted settings)** — critical:
+  - Changes must be **additive only**. Allowed: adding a new object, adding a new property to an existing object, adding a new member to an existing `enumeration`.
+  - **Forbidden** (→ `error`, breaks settings mapping in users' existing reports): renaming or removing an existing object/property; changing the `type` of an existing property; renaming/removing existing `enumeration` values; renaming/removing `dataRoles` `name` or `dataViewMappings` bindings.
+  - When in doubt, diff `capabilities.json` against the last released tag and confirm every change is an addition.
+- **`pbiviz.json`**:
+  - `visual.version` is 4-part `major.minor.patch.build`. Bump for functional changes: new feature → bump **minor** (2nd digit); bug fix → bump **patch** (3rd digit).
+  - **Version consistency**: `pbiviz.json` `visual.version` and `package.json` `version` must be **identical 4-part** strings, and `CHANGELOG.md` must have a matching 4-part entry. The repo is `private: true` (never published to npm), so the npm SemVer 3-part constraint does not apply — keep 4-part everywhere for consistency with Partner Center / AppSource, which requires the 4th `build` component.
+  - `visual.displayName` must **not** embed the version number (e.g. `Dot Plot`, not `Dot Plot 2.1.3.0`) — the version is technical metadata, not a user-facing part of the name.
+  - `visual.guid`, `visual.displayName`, `author`, `supportUrl`, `apiVersion` present.
+  - `apiVersion` compatible with `@types/powerbi-visuals-api` (major alignment) → mismatch → `warning`.
+
+### 2) Security & forbidden patterns (report file:line)
+- Unsafe DOM:
+  - `innerHTML\s*=` → `error` with safe alternative.
+  - `.html\(` (D3 selections) → `error` when D3 imported; otherwise `warning`.
+- Dynamic scripts / code eval:
+  - `createElement\(['"]script['"]\)` / `appendChild` of scripts → `error`.
+  - `eval\(` or `new Function\(` → `error`.
+  - String-based timers:  
+    `set(?:Timeout|Interval)\(\s*(['"]).*?\1` → `error`.
+- Network / runtime:
+  - `fetch\(`, `XMLHttpRequest`, `WebSocket` → `error` (Power BI certified visuals constraint).
+- Prefer safe APIs:
+  - `textContent`, `setAttribute` over `innerHTML`. Provide auto-fix snippet if RHS is a simple string literal.
+
+### 3) Secrets & credentials
+- Run regex scans on changed text files (exclude binaries and lock files).
+- Examples (non-exhaustive):
+  - `AKIA[0-9A-Z]{16}` (AWS)
+  - `ghp_[A-Za-z0-9]{36,}` (GitHub)
+  - `xox[baprs]-[A-Za-z0-9-]{10,48}` (Slack)
+  - `eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}` (JWT)
+  - `(AccountKey|SharedAccessKey|SAS|Sig|se=|sp=|sr=|spr=|sv=|st=|sk=|connection\s*string)\s*=\s*[^;'\n]+` (Azure)
+  - `npm_[A-Za-z0-9]{36,}` (NPM)
+  - `-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----`
+- Any hit → `error` + urgent human review. **Do not auto-edit.**
+
+### 4) Build artifacts, minification & large assets
+- `error`: any `\.min\.(js|ts|css)$` under `src/**`.
+- `warning`: likely-minified file (avg line length > 300 and median > 120) in `src/**`.
+- `warning`: large files in `src/**` > 250 KB (exclude `assets/**` and PBIVIZ icons).
+- `warning`: assets > 500 KB — recommend re-evaluating bundling, compression, or CDN prohibition (if applicable).
+
+### 5) Linting, tests
+- `package.json` scripts must include:
+  - `lint`, `test`, `package` (or `pbiviz package`) → missing → `warning`.
+- ESLint configuration must exist at repo root:
+  - Prefer `eslint.config.mjs`; if `.eslintrc.*` or `.eslintignore` or `eslintConfig` in `package.json` -> ask to migrate to `eslint.config.mjs`.
+  - Missing → `warning` + suggest basic config for Power BI visuals.
+
+### 6) Dependencies
+- On `dependencies`/`devDependencies` changes require updated `package-lock.json` or `yarn.lock` → `warning`.
+- Major-bump in `package.json` → `warning` with request to describe motivation/test-case.
+- When adding new features → ensure minor-version is bumped.
+- (Optional, as `info`) suggest running `npm audit` (at maintainers' discretion).
+
+### 7) Tests & localization
+- If logic touched in `src/**` and no new/updated tests nearby → `warning`-reminder.
+- UI strings:
+  - Check `stringResources/en-US/resources.resjson` and string correspondence from code.
+  - Every `displayNameKey` / `descriptionKey` referenced in `src/**` and `capabilities.json` must have a matching entry in `stringResources/en-US/resources.resjson`; a referenced-but-missing key → `warning`.
+  - Missing localization keys → `warning`.
+  - New en-US keys need not be translated in the PR — non-en-US locales are handled by a dedicated translation team.
+- Spellcheck (en-US as source):
+  - Report probable typos with level (`info`/`warning`) and replacement suggestion.
+  - Exclude identifiers/acronyms/brand-names (use a repo spellcheck whitelist file if one exists).
+
+### 8) Documentation & changelog
+- For non-trivial changes — update `CHANGELOG.md` → `info`/`warning`.
+- For new public APIs — add usage examples → `info`.
+
+### 9) Code quality & architecture (senior review mindset)
+- Briefly summarize PR purpose and affected areas (render, data, settings, UI).
+- Highlight:
+  - Potential performance bottlenecks (DOM in hot paths, unnecessary loops, re-renders).
+  - Accessibility (ARIA, contrasts, keyboard navigation, screen reader).
+  - Errors/edge-cases: null/undefined/empty data.
+  - Resource management: cleanup D3-selectors, event handlers, timers.
+  - State/races/leaks; excessive coupling; duplication.
+  - Power BI SDK/utilities compliance, formatting, API contracts.
+  - On-object formatting (if implemented, e.g. under `src/onObject/**`): sub-selection object names and `FormattingId` references must point to real `capabilities.json` objects/properties.
+  - The formatting model (the `FormattingSettingsModel` class, e.g. `src/*SettingsModel.ts` or `src/settings.ts`) cards/slices must stay in sync with `capabilities.json` (object and property `name`s must match).
+
+## Spellcheck Configuration
+
+### What to Check:
+- UI strings in code (`src/**`)
+- localization files (`stringResources/en-US/**`)
+- PR title and description.
+
+### Severity:
+- `warning` — UI strings and localization.
+- `info` — PR metadata and comments.
+
+---
+
+## Severity & automated labels
+
+- **error** — must fix before merge (e.g., secrets, `WebAccess`, minified code in `src/**`, forbidden APIs).
+- **warning** — should fix soon (e.g., missing PR description/tests, major dep bump, large assets).
+- **info** — suggestions/style (typos, architecture improvements).
+
+**Auto-labels** (by highest severity and change type):  
+`security`, `needs-review`, `tests`, `enhancement`, `performance`, `localization`.
+
+---
+
+## Canonical regex library (reference)
+```
+# Conventional commits
+^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9-./]+\))?(!)?: .{1,72}$
+
+# Unsafe DOM / HTML injection
+\binnerHTML\s*=
+\.html\s*\(
+
+# Dynamic scripts / code eval
+createElement\s*\(\s*['"]script['"]\s*\)|appendChild\s*\([^)]*script[^)]*\)
+\beval\s*\(
+\bnew\s+Function\s*\(
+set(?:Timeout|Interval)\s*\(\s*(['"]).*?\1
+
+# Network APIs
+\bXMLHttpRequest\b|\bWebSocket\b|\bfetch\s*\(
+
+# Secrets (subset)
+AKIA[0-9A-Z]{16}
+ghp_[A-Za-z0-9]{36,}
+xox[baprs]-[A-Za-z0-9-]{10,48}
+eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}
+(AccountKey|SharedAccessKey|SAS|Sig|se=|sp=|sr=|spr=|sv=|st=|sk=|connection\s*string)\s*=\s*[^;'\n]+
+npm_[A-Za-z0-9]{36,}
+```
