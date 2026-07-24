@@ -81,6 +81,24 @@ describe("DotPlot", () => {
             });
         });
 
+        it("xAxis tick labels do not overlap in a reduced viewport", () => {
+            visualBuilder = new DotPlotBuilder(300, 250);
+            defaultDataViewBuilder.valuesCategory = DotPlotData.ValuesCategoryLongNames;
+            dataView = defaultDataViewBuilder.getDataView();
+
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const tickRects: DOMRect[] = visualBuilder.xAxisTickText
+                .map((element: SVGTextElement) => element.getBoundingClientRect())
+                .filter((rect: DOMRect) => rect.width > 0)
+                .sort((left: DOMRect, right: DOMRect) => left.left - right.left);
+
+            expect(tickRects.length).toBeGreaterThan(1);
+            tickRects.slice(1).forEach((right: DOMRect, index: number) => {
+                expect(tickRects[index].right).toBeLessThanOrEqual(right.left);
+            });
+        });
+
         it("should correctly render duplicates in categories", done => {
             dataView.categorical!.categories![0].values[1] =
                 dataView.categorical!.categories![0].values[0];
@@ -441,6 +459,37 @@ describe("DotPlot", () => {
                     .forEach((element: SVGTextElement) => {
                         expect(element.style.fontSize).toBe(fontSizeInPt);
                     });
+            });
+
+            it("saved radius-15 labels do not overlap dots with large formatted values", () => {
+                const geometryTolerance: number = 0.5;
+                visualBuilder = new DotPlotBuilder(620, 300);
+                defaultDataViewBuilder.valuesCategory = DotPlotData.LargeValueCategories;
+                defaultDataViewBuilder.valuesValue = DotPlotData.LargeValues;
+                dataView = defaultDataViewBuilder.getDataView();
+                dataView.categorical!.values![0].source.format = "$0";
+                dataView.metadata.objects = {
+                    dataPoint: {
+                        radius: 15
+                    },
+                    labels: {
+                        show: true,
+                        labelDisplayUnits: 1000,
+                        labelPrecision: 2,
+                        orientation: DotPlotLabelsOrientation.Horizontal
+                    }
+                };
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                const labels: SVGTextElement[] = visualBuilder.dataLabels;
+                expect(labels.length).toBe(DotPlotData.LargeValueCategories.length);
+                labels.forEach((element: SVGTextElement) => {
+                    const datum: DotPlotDataGroup = d3Select(element).datum() as DotPlotDataGroup;
+                    const labelRect: DOMRect = element.getBoundingClientRect();
+                    const groupRect: DOMRect = visualBuilder.dotGroups[datum.index].getBoundingClientRect();
+                    expect(labelRect.bottom).toBeLessThanOrEqual(groupRect.top + geometryTolerance);
+                });
             });
 
             const orientations: DotPlotLabelsOrientation[] = [DotPlotLabelsOrientation.Horizontal, DotPlotLabelsOrientation.Vertical];

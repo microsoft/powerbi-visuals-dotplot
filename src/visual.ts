@@ -810,10 +810,8 @@ export class DotPlot implements IVisual {
                 this.data.maxLabelWidth / DotPlot.MiddleLabelWidth,
                 height));
 
-        const xAxis: d3Axis<any> = this.xAxisProperties.axis.tickFormat(function (d) { return d.x; });
-
         this.xAxisSelection
-            .call(xAxis)
+            .call(this.xAxisProperties.axis)
             .selectAll(`g${DotPlot.TickTextSelector.selectorName}`)
             .style("fill", this.formattingSettings.categoryAxis.labelColor.value.value);
 
@@ -824,13 +822,7 @@ export class DotPlot implements IVisual {
                 .style("stroke", this.formattingSettings.categoryAxis.labelColor.value.value);
         }
 
-        if (this.formattingSettings.categoryAxis.show.value) {
-            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
-                .text((index: number) => {
-                    return this.data.dataGroups[index]
-                        && this.data.dataGroups[index].category.value;
-                });
-        } else {
+        if (!this.formattingSettings.categoryAxis.show.value) {
             this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
                 .append("title")
                 .text((index: number) => {

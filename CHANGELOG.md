@@ -1,4 +1,5 @@
 ## 2.1.3.0
+* Fixed X-axis category labels overlapping after the visual is resized
 * Removed an unused `tooltips` data role reference from capabilities
 * Updated CI workflows (trigger on default branch, refreshed action versions, Node 20/22, npm cache, concurrency)
 * Run Karma tests with `--no-sandbox` so the build passes on current Ubuntu runners
