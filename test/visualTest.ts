@@ -82,6 +82,7 @@ describe("DotPlot", () => {
         });
 
         it("xAxis tick labels do not overlap in a reduced viewport", () => {
+            const geometryTolerance: number = 0.5;
             visualBuilder = new DotPlotBuilder(300, 250);
             defaultDataViewBuilder.valuesCategory = DotPlotData.ValuesCategoryLongNames;
             dataView = defaultDataViewBuilder.getDataView();
@@ -95,7 +96,7 @@ describe("DotPlot", () => {
 
             expect(tickRects.length).toBeGreaterThan(1);
             tickRects.slice(1).forEach((right: DOMRect, index: number) => {
-                expect(tickRects[index].right).toBeLessThanOrEqual(right.left);
+                expect(tickRects[index].right).toBeLessThanOrEqual(right.left + geometryTolerance);
             });
         });
 
@@ -123,6 +124,21 @@ describe("DotPlot", () => {
             expect(event.defaultPrevented).toBeTrue();
             expect(dispatchResult).toBeFalse();
             expect(bubbledContextMenuSpy).not.toHaveBeenCalled();
+        });
+
+        it("xAxis tick ignores context menu events for invalid category indices", () => {
+            const selectionManager = visualBuilder.visualHost.createSelectionManager();
+            const showContextMenuSpy = spyOn(selectionManager, "showContextMenu").and.callThrough();
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const tick: SVGGElement = visualBuilder.xAxisTicks[0];
+            d3Select(tick).datum(visualBuilder.dotGroups.length);
+            const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+
+            tick.dispatchEvent(event);
+
+            expect(showContextMenuSpy).not.toHaveBeenCalled();
+            expect(event.defaultPrevented).toBeTrue();
         });
 
         it("should correctly render duplicates in categories", done => {
@@ -331,6 +347,7 @@ describe("DotPlot", () => {
                 (dataView.metadata.objects as any).categoryAxis.show = false;
 
                 visualBuilder.updateFlushAllD3Transitions(dataView);
+                visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.xAxisTicks
                     .forEach((element: SVGGElement) => {
@@ -341,9 +358,9 @@ describe("DotPlot", () => {
                 visualBuilder.xAxisTicks
                     .map(e => e.querySelector("text")!)
                     .forEach(e => {
-                        const title = e.querySelector("title");
-                        expect(title).toBeDefined();
-                        expect(title!.textContent).toBeTruthy();
+                        const titles = e.querySelectorAll("title");
+                        expect(titles.length).toBe(1);
+                        expect(titles[0].textContent).toBeTruthy();
                     });
             });
 

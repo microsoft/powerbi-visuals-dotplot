@@ -109,7 +109,13 @@ export class DotplotBehavior {
         this.options.xAxisTicks.on("contextmenu", (event: MouseEvent, index: number) => {
             event.preventDefault();
             event.stopPropagation();
-            this.selectionManager.showContextMenu(this.options.dataPoints[index].identity, {
+
+            const dataPoint: DotPlotDataGroup | undefined = this.options.dataPoints[index];
+            if (!dataPoint) {
+                return;
+            }
+
+            this.selectionManager.showContextMenu(dataPoint.identity, {
                 x: event.clientX,
                 y: event.clientY
             });

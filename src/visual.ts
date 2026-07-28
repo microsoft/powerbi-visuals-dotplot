@@ -846,7 +846,9 @@ export class DotPlot implements IVisual {
 
         if (!this.formattingSettings.categoryAxis.show.value) {
             this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
-                .append("title")
+                .selectAll("title")
+                .data((index: number) => [index])
+                .join("title")
                 .text((index: number) => {
                     return this.data.dataGroups[index]
                         && this.data.dataGroups[index].category.value;
