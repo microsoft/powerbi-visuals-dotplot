@@ -718,14 +718,25 @@ export class DotPlot implements IVisual {
     }
 
     private removeLabelsOverlappingDots(labels: d3Selection<SVGTextElement, DotPlotDataGroup, SVGGElement, unknown>): void {
-        const dotRects: DOMRect[] = this.dotPlot
-            .selectAll<SVGCircleElement, DotPlotDataPoint>("circle")
+        const dotRectsByGroup: Map<number, DOMRect[]> = new Map<number, DOMRect[]>();
+
+        this.dotPlot
+            .selectAll<SVGGElement, DotPlotDataGroup>(DotPlot.PlotGroupSelector.selectorName)
             .nodes()
-            .map((dot: SVGCircleElement) => dot.getBoundingClientRect());
+            .forEach((group: SVGGElement) => {
+                const dataGroup: DotPlotDataGroup = d3Select<SVGGElement, DotPlotDataGroup>(group).datum();
+                const dotRects: DOMRect[] = Array.from(group.querySelectorAll("circle"))
+                    .map((dot: SVGCircleElement) => dot.getBoundingClientRect());
+
+                dotRectsByGroup.set(dataGroup.index, dotRects);
+            });
 
         labels.nodes().forEach((label: SVGTextElement) => {
+            const dataGroup: DotPlotDataGroup = d3Select<SVGTextElement, DotPlotDataGroup>(label).datum();
             const labelRect: DOMRect = label.getBoundingClientRect();
-            const overlapsDot: boolean = dotRects.some((dotRect: DOMRect) => labelRect.left < dotRect.right
+            const nearbyDotRects: DOMRect[] = [dataGroup.index - 1, dataGroup.index, dataGroup.index + 1]
+                .flatMap((index: number) => dotRectsByGroup.get(index) || []);
+            const overlapsDot: boolean = nearbyDotRects.some((dotRect: DOMRect) => labelRect.left < dotRect.right
                 && labelRect.right > dotRect.left
                 && labelRect.top < dotRect.bottom
                 && labelRect.bottom > dotRect.top);
