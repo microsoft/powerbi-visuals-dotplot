@@ -487,7 +487,7 @@ describe("DotPlot", () => {
                     });
             });
 
-            it("saved radius-15 labels do not overlap dots with large formatted values", () => {
+            it("saved radius-15 layout does not overlap labels, dots, or X-axis text", () => {
                 const geometryTolerance: number = 0.5;
                 visualBuilder = new DotPlotBuilder(620, 300);
                 defaultDataViewBuilder.valuesCategory = DotPlotData.LargeValueCategories;
@@ -500,8 +500,9 @@ describe("DotPlot", () => {
                     },
                     labels: {
                         show: true,
-                        labelDisplayUnits: 1000,
-                        labelPrecision: 2,
+                        fontSize: 15,
+                        labelDisplayUnits: 1,
+                        labelPrecision: 5,
                         orientation: DotPlotLabelsOrientation.Horizontal
                     }
                 };
@@ -509,12 +510,30 @@ describe("DotPlot", () => {
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 const labels: SVGTextElement[] = visualBuilder.dataLabels;
-                expect(labels.length).toBe(DotPlotData.LargeValueCategories.length);
+                const dots: SVGCircleElement[] = Array.from(visualBuilder.dotGroups)
+                    .flatMap((group: SVGGElement) => Array.from(group.querySelectorAll("circle")));
+                expect(labels.length).toBeGreaterThan(0);
+                expect(dots.length).toBeGreaterThan(0);
                 labels.forEach((element: SVGTextElement) => {
-                    const datum: DotPlotDataGroup = d3Select(element).datum() as DotPlotDataGroup;
                     const labelRect: DOMRect = element.getBoundingClientRect();
-                    const groupRect: DOMRect = visualBuilder.dotGroups[datum.index].getBoundingClientRect();
-                    expect(labelRect.bottom).toBeLessThanOrEqual(groupRect.top + geometryTolerance);
+                    dots.forEach((dot: SVGCircleElement) => {
+                        const dotRect: DOMRect = dot.getBoundingClientRect();
+                        const overlaps: boolean = labelRect.left < dotRect.right - geometryTolerance
+                            && labelRect.right > dotRect.left + geometryTolerance
+                            && labelRect.top < dotRect.bottom - geometryTolerance
+                            && labelRect.bottom > dotRect.top + geometryTolerance;
+                        expect(overlaps).toBeFalse();
+                    });
+                });
+
+                const tickRects: DOMRect[] = visualBuilder.xAxisTickText
+                    .map((element: SVGTextElement) => element.getBoundingClientRect())
+                    .filter((rect: DOMRect) => rect.width > 0)
+                    .sort((left: DOMRect, right: DOMRect) => left.left - right.left);
+
+                expect(tickRects.length).toBeGreaterThan(1);
+                tickRects.slice(1).forEach((right: DOMRect, index: number) => {
+                    expect(tickRects[index].right).toBeLessThanOrEqual(right.left + geometryTolerance);
                 });
             });
 

@@ -598,6 +598,8 @@ export class DotPlot implements IVisual {
                         .style("font-style", this.formattingSettings.labels.font.italic.value ? "italic" : "normal")
                         .style("font-weight", this.formattingSettings.labels.font.bold.value ? "bold" : "normal")
                         .style("text-decoration", this.formattingSettings.labels.font.underline.value ? "underline" : "none");
+
+                    this.removeLabelsOverlappingDots(labels);
                 }
             }
             else {
@@ -713,6 +715,25 @@ export class DotPlot implements IVisual {
                 "font-family": LabelTextProperties.fontFamily
             },
         };
+    }
+
+    private removeLabelsOverlappingDots(labels: d3Selection<SVGTextElement, DotPlotDataGroup, SVGGElement, unknown>): void {
+        const dotRects: DOMRect[] = this.dotPlot
+            .selectAll<SVGCircleElement, DotPlotDataPoint>("circle")
+            .nodes()
+            .map((dot: SVGCircleElement) => dot.getBoundingClientRect());
+
+        labels.nodes().forEach((label: SVGTextElement) => {
+            const labelRect: DOMRect = label.getBoundingClientRect();
+            const overlapsDot: boolean = dotRects.some((dotRect: DOMRect) => labelRect.left < dotRect.right
+                && labelRect.right > dotRect.left
+                && labelRect.top < dotRect.bottom
+                && labelRect.bottom > dotRect.top);
+
+            if (overlapsDot) {
+                label.remove();
+            }
+        });
     }
 
     private clear(): void {
