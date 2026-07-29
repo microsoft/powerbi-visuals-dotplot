@@ -316,6 +316,11 @@ describe("DotPlot", () => {
 
     describe("Format settings test", () => {
         describe("X-axis", () => {
+            const getTickLabelText = (element: SVGTextElement): string => Array.from(element.childNodes)
+                .filter((node: ChildNode) => node.nodeType === Node.TEXT_NODE)
+                .map((node: ChildNode) => node.textContent)
+                .join("");
+
             beforeEach(() => {
                 dataView.metadata.objects = {
                     categoryAxis: {
@@ -339,14 +344,14 @@ describe("DotPlot", () => {
                 visualBuilder.xAxisTicks
                     .map(e => e.querySelector("text")!)
                     .forEach((e: SVGTextElement) => {
-                        expect(e.children.length).toBe(0);
-                        expect(e.tagName).not.toBe("title");
-                        expect(e.textContent!).toBeTruthy();
+                        const titles = e.querySelectorAll("title");
+                        expect(titles.length).toBe(1);
+                        expect(titles[0].textContent).toBeTruthy();
+                        expect(getTickLabelText(e)).toBeTruthy();
                     });
 
                 (dataView.metadata.objects as any).categoryAxis.show = false;
 
-                visualBuilder.updateFlushAllD3Transitions(dataView);
                 visualBuilder.updateFlushAllD3Transitions(dataView);
 
                 visualBuilder.xAxisTicks
@@ -361,6 +366,7 @@ describe("DotPlot", () => {
                         const titles = e.querySelectorAll("title");
                         expect(titles.length).toBe(1);
                         expect(titles[0].textContent).toBeTruthy();
+                        expect(getTickLabelText(e)).toBe("");
                     });
             });
 
@@ -551,6 +557,44 @@ describe("DotPlot", () => {
                 expect(tickRects.length).toBeGreaterThan(1);
                 tickRects.slice(1).forEach((right: DOMRect, index: number) => {
                     expect(tickRects[index].right).toBeLessThanOrEqual(right.left + geometryTolerance);
+                });
+            });
+
+            it("wide labels do not overlap dots when stack heights are uneven", () => {
+                const geometryTolerance: number = 0.5;
+                visualBuilder = new DotPlotBuilder(400, 300);
+                defaultDataViewBuilder.valuesValue = DotPlotData.UnevenStackValues;
+                dataView = defaultDataViewBuilder.getDataView();
+                dataView.metadata.objects = {
+                    dataPoint: {
+                        radius: 15
+                    },
+                    labels: {
+                        show: true,
+                        fontSize: 15,
+                        labelDisplayUnits: 1,
+                        labelPrecision: 5,
+                        orientation: DotPlotLabelsOrientation.Horizontal
+                    }
+                };
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                const labels: SVGTextElement[] = visualBuilder.dataLabels;
+                const dots: SVGCircleElement[] = Array.from(visualBuilder.dotGroups)
+                    .flatMap((group: SVGGElement) => Array.from(group.querySelectorAll("circle")));
+                expect(labels.length).toBeGreaterThan(1);
+                expect(dots.length).toBeGreaterThan(0);
+                labels.forEach((element: SVGTextElement) => {
+                    const labelRect: DOMRect = element.getBoundingClientRect();
+                    dots.forEach((dot: SVGCircleElement) => {
+                        const dotRect: DOMRect = dot.getBoundingClientRect();
+                        const overlaps: boolean = labelRect.left < dotRect.right - geometryTolerance
+                            && labelRect.right > dotRect.left + geometryTolerance
+                            && labelRect.top < dotRect.bottom - geometryTolerance
+                            && labelRect.bottom > dotRect.top + geometryTolerance;
+                        expect(overlaps).toBeFalse();
+                    });
                 });
             });
 

@@ -73,6 +73,19 @@ export class DotPlotData extends TestDataViewBuilder {
         17520
     ];
 
+    public static UnevenStackValues: number[] = [
+        99000,
+        10,
+        10,
+        10,
+        99000,
+        10,
+        10,
+        10,
+        99000,
+        10
+    ];
+
     public valuesCategory: string[] = [
         "William",
         "Olivia",

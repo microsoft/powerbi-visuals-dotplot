@@ -54,7 +54,6 @@ import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructor
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 
 // d3
-import { Axis as d3Axis } from "d3-axis";
 import { Selection as d3Selection, select as d3Select } from "d3-selection";
 import {
     ScaleLogarithmic as d3LogScale,
@@ -120,6 +119,7 @@ export class DotPlot implements IVisual {
     private static AxisSelector: ClassAndSelector = createClassAndSelector("axisGraphicsContext");
     private static XAxisSelector: ClassAndSelector = createClassAndSelector("x axis");
     private static CircleSelector: ClassAndSelector = createClassAndSelector("circleSelector");
+    private static TickSelector: ClassAndSelector = createClassAndSelector("tick");
     private static TickTextSelector: ClassAndSelector = createClassAndSelector("tick text");
     private static XAxisLabelSelector: ClassAndSelector = createClassAndSelector("xAxisLabel");
 
@@ -547,7 +547,7 @@ export class DotPlot implements IVisual {
 
             const behaviorOptions: DotplotBehaviorOptions = {
                 columns: dotGroupSelection,
-                xAxisTicks: this.xAxisSelection.selectAll<SVGGElement, number>("g.tick"),
+                xAxisTicks: this.xAxisSelection.selectAll<SVGGElement, number>(`g${DotPlot.TickSelector.selectorName}`),
                 clearCatcher: this.clearCatcher,
                 isHighContrastMode: this.colorHelper.isHighContrast,
                 dataPoints: this.data.dataGroups,
@@ -718,33 +718,21 @@ export class DotPlot implements IVisual {
     }
 
     private removeLabelsOverlappingDots(labels: d3Selection<SVGTextElement, DotPlotDataGroup, SVGGElement, unknown>): void {
-        const dotRectsByGroup: Map<number, DOMRect[]> = new Map<number, DOMRect[]>();
-
-        this.dotPlot
-            .selectAll<SVGGElement, DotPlotDataGroup>(DotPlot.PlotGroupSelector.selectorName)
+        const dotRects: DOMRect[] = this.dotPlot
+            .selectAll<SVGCircleElement, DotPlotDataPoint>(DotPlot.CircleSelector.selectorName)
             .nodes()
-            .forEach((group: SVGGElement) => {
-                const dataGroup: DotPlotDataGroup = d3Select<SVGGElement, DotPlotDataGroup>(group).datum();
-                const dotRects: DOMRect[] = Array.from(group.querySelectorAll("circle"))
-                    .map((dot: SVGCircleElement) => dot.getBoundingClientRect());
+            .map((dot: SVGCircleElement) => dot.getBoundingClientRect());
 
-                dotRectsByGroup.set(dataGroup.index, dotRects);
-            });
-
-        labels.nodes().forEach((label: SVGTextElement) => {
-            const dataGroup: DotPlotDataGroup = d3Select<SVGTextElement, DotPlotDataGroup>(label).datum();
+        const overlappingLabels: SVGTextElement[] = labels.nodes().filter((label: SVGTextElement) => {
             const labelRect: DOMRect = label.getBoundingClientRect();
-            const nearbyDotRects: DOMRect[] = [dataGroup.index - 1, dataGroup.index, dataGroup.index + 1]
-                .flatMap((index: number) => dotRectsByGroup.get(index) || []);
-            const overlapsDot: boolean = nearbyDotRects.some((dotRect: DOMRect) => labelRect.left < dotRect.right
+
+            return dotRects.some((dotRect: DOMRect) => labelRect.left < dotRect.right
                 && labelRect.right > dotRect.left
                 && labelRect.top < dotRect.bottom
                 && labelRect.bottom > dotRect.top);
-
-            if (overlapsDot) {
-                label.remove();
-            }
         });
+
+        overlappingLabels.forEach((label: SVGTextElement) => label.remove());
     }
 
     private clear(): void {
@@ -855,16 +843,12 @@ export class DotPlot implements IVisual {
                 .style("stroke", this.formattingSettings.categoryAxis.labelColor.value.value);
         }
 
-        if (!this.formattingSettings.categoryAxis.show.value) {
-            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
-                .selectAll("title")
-                .data((index: number) => [index])
-                .join("title")
-                .text((index: number) => {
-                    return this.data.dataGroups[index]
-                        && this.data.dataGroups[index].category.value;
-                });
-        }
+        this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
+            .append("title")
+            .text((index: number) => {
+                return this.data.dataGroups[index]
+                    && this.data.dataGroups[index].category.value;
+            });
 
         this.xAxisSelection
             .selectAll("line")
