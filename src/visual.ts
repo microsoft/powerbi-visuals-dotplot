@@ -718,10 +718,11 @@ export class DotPlot implements IVisual {
     }
 
     private removeLabelsOverlappingDots(labels: d3Selection<SVGTextElement, DotPlotDataGroup, SVGGElement, unknown>): void {
+        // Dots in a column share one x-range, so a single rect per column stands in for all its dots.
         const dotRects: DOMRect[] = this.dotPlot
-            .selectAll<SVGCircleElement, DotPlotDataPoint>(DotPlot.CircleSelector.selectorName)
+            .selectAll<SVGGElement, DotPlotDataGroup>(DotPlot.PlotGroupSelector.selectorName)
             .nodes()
-            .map((dot: SVGCircleElement) => dot.getBoundingClientRect());
+            .map((group: SVGGElement) => group.getBoundingClientRect());
 
         const overlappingLabels: SVGTextElement[] = labels.nodes().filter((label: SVGTextElement) => {
             const labelRect: DOMRect = label.getBoundingClientRect();
@@ -843,12 +844,19 @@ export class DotPlot implements IVisual {
                 .style("stroke", this.formattingSettings.categoryAxis.labelColor.value.value);
         }
 
-        this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
-            .append("title")
-            .text((index: number) => {
-                return this.data.dataGroups[index]
-                    && this.data.dataGroups[index].category.value;
-            });
+        this.xAxisSelection
+            .selectAll(`${DotPlot.TickTextSelector.selectorName} title`)
+            .remove();
+
+        // A hidden axis renders empty tick text, which has no geometry to hover and no a11y presence.
+        if (this.formattingSettings.categoryAxis.show.value) {
+            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
+                .append("title")
+                .text((index: number) => {
+                    return this.data.dataGroups[index]
+                        && this.data.dataGroups[index].category.value;
+                });
+        }
 
         this.xAxisSelection
             .selectAll("line")

@@ -111,11 +111,13 @@ export class DotplotBehavior {
             event.stopPropagation();
 
             const dataPoint: DotPlotDataGroup | undefined = this.options.dataPoints[index];
-            if (!dataPoint) {
-                return;
-            }
+            const emptySelection = {
+                "measures": [],
+                "dataMap": {
+                }
+            };
 
-            this.selectionManager.showContextMenu(dataPoint.identity, {
+            this.selectionManager.showContextMenu(dataPoint ? dataPoint.identity : emptySelection, {
                 x: event.clientX,
                 y: event.clientY
             });

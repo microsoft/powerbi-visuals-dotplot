@@ -126,7 +126,7 @@ describe("DotPlot", () => {
             expect(bubbledContextMenuSpy).not.toHaveBeenCalled();
         });
 
-        it("xAxis tick ignores context menu events for invalid category indices", () => {
+        it("xAxis tick opens the empty context menu for invalid category indices", () => {
             const selectionManager = visualBuilder.visualHost.createSelectionManager();
             const showContextMenuSpy = spyOn(selectionManager, "showContextMenu").and.callThrough();
             visualBuilder.updateFlushAllD3Transitions(dataView);
@@ -137,7 +137,8 @@ describe("DotPlot", () => {
 
             tick.dispatchEvent(event);
 
-            expect(showContextMenuSpy).not.toHaveBeenCalled();
+            expect(showContextMenuSpy).toHaveBeenCalledTimes(1);
+            expect(showContextMenuSpy.calls.mostRecent().args[0]).toEqual({ measures: [], dataMap: {} });
             expect(event.defaultPrevented).toBeTrue();
         });
 
@@ -363,9 +364,7 @@ describe("DotPlot", () => {
                 visualBuilder.xAxisTicks
                     .map(e => e.querySelector("text")!)
                     .forEach(e => {
-                        const titles = e.querySelectorAll("title");
-                        expect(titles.length).toBe(1);
-                        expect(titles[0].textContent).toBeTruthy();
+                        expect(e.querySelectorAll("title").length).toBe(0);
                         expect(getTickLabelText(e)).toBe("");
                     });
             });
@@ -535,7 +534,8 @@ describe("DotPlot", () => {
                 const labels: SVGTextElement[] = visualBuilder.dataLabels;
                 const dots: SVGCircleElement[] = Array.from(visualBuilder.dotGroups)
                     .flatMap((group: SVGGElement) => Array.from(group.querySelectorAll("circle")));
-                expect(labels.length).toBeGreaterThan(0);
+                expect(labels.length).toBe(3);
+                expect(labels.map((element: SVGTextElement) => element.textContent)).toContain("$97950.00000");
                 expect(dots.length).toBeGreaterThan(0);
                 labels.forEach((element: SVGTextElement) => {
                     const labelRect: DOMRect = element.getBoundingClientRect();
@@ -583,7 +583,7 @@ describe("DotPlot", () => {
                 const labels: SVGTextElement[] = visualBuilder.dataLabels;
                 const dots: SVGCircleElement[] = Array.from(visualBuilder.dotGroups)
                     .flatMap((group: SVGGElement) => Array.from(group.querySelectorAll("circle")));
-                expect(labels.length).toBeGreaterThan(1);
+                expect(labels.length).toBe(2);
                 expect(dots.length).toBeGreaterThan(0);
                 labels.forEach((element: SVGTextElement) => {
                     const labelRect: DOMRect = element.getBoundingClientRect();
