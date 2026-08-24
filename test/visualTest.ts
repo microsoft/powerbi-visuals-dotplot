@@ -81,6 +81,67 @@ describe("DotPlot", () => {
             });
         });
 
+        it("xAxis tick labels do not overlap in a reduced viewport", () => {
+            const geometryTolerance: number = 0.5;
+            visualBuilder = new DotPlotBuilder(300, 250);
+            defaultDataViewBuilder.valuesCategory = DotPlotData.ValuesCategoryLongNames;
+            dataView = defaultDataViewBuilder.getDataView();
+
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const tickRects: DOMRect[] = visualBuilder.xAxisTickText
+                .map((element: SVGTextElement) => element.getBoundingClientRect())
+                .filter((rect: DOMRect) => rect.width > 0)
+                .sort((left: DOMRect, right: DOMRect) => left.left - right.left);
+
+            expect(tickRects.length).toBeGreaterThan(1);
+            tickRects.slice(1).forEach((right: DOMRect, index: number) => {
+                expect(tickRects[index].right).toBeLessThanOrEqual(right.left + geometryTolerance);
+            });
+        });
+
+        it("xAxis tick opens the Power BI context menu", () => {
+            visualBuilder = new DotPlotBuilder(300, 250);
+            const selectionManager = visualBuilder.visualHost.createSelectionManager();
+            const showContextMenuSpy = spyOn(selectionManager, "showContextMenu").and.callThrough();
+            const bubbledContextMenuSpy = jasmine.createSpy("bubbledContextMenu");
+            visualBuilder.element.addEventListener("contextmenu", bubbledContextMenuSpy);
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const tick: SVGGElement = visualBuilder.xAxisTicks[1];
+            const dataGroupIndex: number = d3Select(tick).datum() as number;
+            const expectedIdentity = (d3Select(visualBuilder.dotGroups[dataGroupIndex]).datum() as DotPlotDataGroup).identity;
+            const event = new MouseEvent("contextmenu", {
+                bubbles: true,
+                cancelable: true,
+                clientX: 25,
+                clientY: 50
+            });
+
+            const dispatchResult: boolean = tick.dispatchEvent(event);
+
+            expect(showContextMenuSpy).toHaveBeenCalledOnceWith(expectedIdentity, { x: 25, y: 50 });
+            expect(event.defaultPrevented).toBeTrue();
+            expect(dispatchResult).toBeFalse();
+            expect(bubbledContextMenuSpy).not.toHaveBeenCalled();
+        });
+
+        it("xAxis tick opens the empty context menu for invalid category indices", () => {
+            const selectionManager = visualBuilder.visualHost.createSelectionManager();
+            const showContextMenuSpy = spyOn(selectionManager, "showContextMenu").and.callThrough();
+            visualBuilder.updateFlushAllD3Transitions(dataView);
+
+            const tick: SVGGElement = visualBuilder.xAxisTicks[0];
+            d3Select(tick).datum(visualBuilder.dotGroups.length);
+            const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+
+            tick.dispatchEvent(event);
+
+            expect(showContextMenuSpy).toHaveBeenCalledTimes(1);
+            expect(showContextMenuSpy.calls.mostRecent().args[0]).toEqual({ measures: [], dataMap: {} });
+            expect(event.defaultPrevented).toBeTrue();
+        });
+
         it("should correctly render duplicates in categories", done => {
             dataView.categorical!.categories![0].values[1] =
                 dataView.categorical!.categories![0].values[0];
@@ -256,6 +317,11 @@ describe("DotPlot", () => {
 
     describe("Format settings test", () => {
         describe("X-axis", () => {
+            const getTickLabelText = (element: SVGTextElement): string => Array.from(element.childNodes)
+                .filter((node: ChildNode) => node.nodeType === Node.TEXT_NODE)
+                .map((node: ChildNode) => node.textContent)
+                .join("");
+
             beforeEach(() => {
                 dataView.metadata.objects = {
                     categoryAxis: {
@@ -279,9 +345,10 @@ describe("DotPlot", () => {
                 visualBuilder.xAxisTicks
                     .map(e => e.querySelector("text")!)
                     .forEach((e: SVGTextElement) => {
-                        expect(e.children.length).toBe(0);
-                        expect(e.tagName).not.toBe("title");
-                        expect(e.textContent!).toBeTruthy();
+                        const titles = e.querySelectorAll("title");
+                        expect(titles.length).toBe(1);
+                        expect(titles[0].textContent).toBeTruthy();
+                        expect(getTickLabelText(e)).toBeTruthy();
                     });
 
                 (dataView.metadata.objects as any).categoryAxis.show = false;
@@ -297,9 +364,8 @@ describe("DotPlot", () => {
                 visualBuilder.xAxisTicks
                     .map(e => e.querySelector("text")!)
                     .forEach(e => {
-                        const title = e.querySelector("title");
-                        expect(title).toBeDefined();
-                        expect(title!.textContent).toBeTruthy();
+                        expect(e.querySelectorAll("title").length).toBe(0);
+                        expect(getTickLabelText(e)).toBe("");
                     });
             });
 
@@ -441,6 +507,95 @@ describe("DotPlot", () => {
                     .forEach((element: SVGTextElement) => {
                         expect(element.style.fontSize).toBe(fontSizeInPt);
                     });
+            });
+
+            it("saved radius-15 layout does not overlap labels, dots, or X-axis text", () => {
+                const geometryTolerance: number = 0.5;
+                visualBuilder = new DotPlotBuilder(620, 300);
+                defaultDataViewBuilder.valuesCategory = DotPlotData.LargeValueCategories;
+                defaultDataViewBuilder.valuesValue = DotPlotData.LargeValues;
+                dataView = defaultDataViewBuilder.getDataView();
+                dataView.categorical!.values![0].source.format = "$0";
+                dataView.metadata.objects = {
+                    dataPoint: {
+                        radius: 15
+                    },
+                    labels: {
+                        show: true,
+                        fontSize: 15,
+                        labelDisplayUnits: 1,
+                        labelPrecision: 5,
+                        orientation: DotPlotLabelsOrientation.Horizontal
+                    }
+                };
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                const labels: SVGTextElement[] = visualBuilder.dataLabels;
+                const dots: SVGCircleElement[] = Array.from(visualBuilder.dotGroups)
+                    .flatMap((group: SVGGElement) => Array.from(group.querySelectorAll("circle")));
+                expect(labels.length).toBe(3);
+                expect(labels.map((element: SVGTextElement) => element.textContent)).toContain("$97950.00000");
+                expect(dots.length).toBeGreaterThan(0);
+                labels.forEach((element: SVGTextElement) => {
+                    const labelRect: DOMRect = element.getBoundingClientRect();
+                    dots.forEach((dot: SVGCircleElement) => {
+                        const dotRect: DOMRect = dot.getBoundingClientRect();
+                        const overlaps: boolean = labelRect.left < dotRect.right - geometryTolerance
+                            && labelRect.right > dotRect.left + geometryTolerance
+                            && labelRect.top < dotRect.bottom - geometryTolerance
+                            && labelRect.bottom > dotRect.top + geometryTolerance;
+                        expect(overlaps).toBeFalse();
+                    });
+                });
+
+                const tickRects: DOMRect[] = visualBuilder.xAxisTickText
+                    .map((element: SVGTextElement) => element.getBoundingClientRect())
+                    .filter((rect: DOMRect) => rect.width > 0)
+                    .sort((left: DOMRect, right: DOMRect) => left.left - right.left);
+
+                expect(tickRects.length).toBeGreaterThan(1);
+                tickRects.slice(1).forEach((right: DOMRect, index: number) => {
+                    expect(tickRects[index].right).toBeLessThanOrEqual(right.left + geometryTolerance);
+                });
+            });
+
+            it("wide labels do not overlap dots when stack heights are uneven", () => {
+                const geometryTolerance: number = 0.5;
+                visualBuilder = new DotPlotBuilder(400, 300);
+                defaultDataViewBuilder.valuesValue = DotPlotData.UnevenStackValues;
+                dataView = defaultDataViewBuilder.getDataView();
+                dataView.metadata.objects = {
+                    dataPoint: {
+                        radius: 15
+                    },
+                    labels: {
+                        show: true,
+                        fontSize: 15,
+                        labelDisplayUnits: 1,
+                        labelPrecision: 5,
+                        orientation: DotPlotLabelsOrientation.Horizontal
+                    }
+                };
+
+                visualBuilder.updateFlushAllD3Transitions(dataView);
+
+                const labels: SVGTextElement[] = visualBuilder.dataLabels;
+                const dots: SVGCircleElement[] = Array.from(visualBuilder.dotGroups)
+                    .flatMap((group: SVGGElement) => Array.from(group.querySelectorAll("circle")));
+                expect(labels.length).toBe(2);
+                expect(dots.length).toBeGreaterThan(0);
+                labels.forEach((element: SVGTextElement) => {
+                    const labelRect: DOMRect = element.getBoundingClientRect();
+                    dots.forEach((dot: SVGCircleElement) => {
+                        const dotRect: DOMRect = dot.getBoundingClientRect();
+                        const overlaps: boolean = labelRect.left < dotRect.right - geometryTolerance
+                            && labelRect.right > dotRect.left + geometryTolerance
+                            && labelRect.top < dotRect.bottom - geometryTolerance
+                            && labelRect.bottom > dotRect.top + geometryTolerance;
+                        expect(overlaps).toBeFalse();
+                    });
+                });
             });
 
             const orientations: DotPlotLabelsOrientation[] = [DotPlotLabelsOrientation.Horizontal, DotPlotLabelsOrientation.Vertical];

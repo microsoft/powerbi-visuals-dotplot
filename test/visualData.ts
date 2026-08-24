@@ -47,6 +47,45 @@ export class DotPlotData extends TestDataViewBuilder {
         "Miss Emmaline"
     ];
 
+    public static LargeValueCategories: string[] = [
+        "Canada",
+        "Ireland",
+        "Netherlands",
+        "United States",
+        "Germany",
+        "Denmark",
+        "Switzerland",
+        "Australia",
+        "New Zealand",
+        "Singapore"
+    ];
+
+    public static LargeValues: number[] = [
+        97950,
+        91360,
+        82150,
+        75650,
+        62440,
+        59070,
+        54610,
+        54460,
+        24910,
+        17520
+    ];
+
+    public static UnevenStackValues: number[] = [
+        99000,
+        10,
+        10,
+        10,
+        99000,
+        10,
+        10,
+        10,
+        99000,
+        10
+    ];
+
     public valuesCategory: string[] = [
         "William",
         "Olivia",

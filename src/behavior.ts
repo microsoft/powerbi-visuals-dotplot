@@ -48,6 +48,7 @@ export interface SelectableDataPoint extends BaseDataPoint {
 export interface DotplotBehaviorOptions {
     dataPoints: DotPlotDataGroup[];
     columns: d3Selection<SVGGElement, DotPlotDataGroup, any, any>;
+    xAxisTicks: d3Selection<SVGGElement, number, any, any>;
     clearCatcher: d3Selection<any, any, any, any>;
     isHighContrastMode: boolean;
     hasHighlights: boolean;
@@ -100,6 +101,23 @@ export class DotplotBehavior {
             event.preventDefault();
             event.stopPropagation();
             this.selectionManager.showContextMenu(dataPoint.identity, {
+                x: event.clientX,
+                y: event.clientY
+            });
+        });
+
+        this.options.xAxisTicks.on("contextmenu", (event: MouseEvent, index: number) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const dataPoint: DotPlotDataGroup | undefined = this.options.dataPoints[index];
+            const emptySelection = {
+                "measures": [],
+                "dataMap": {
+                }
+            };
+
+            this.selectionManager.showContextMenu(dataPoint ? dataPoint.identity : emptySelection, {
                 x: event.clientX,
                 y: event.clientY
             });

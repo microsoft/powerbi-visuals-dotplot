@@ -54,7 +54,6 @@ import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructor
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 
 // d3
-import { Axis as d3Axis } from "d3-axis";
 import { Selection as d3Selection, select as d3Select } from "d3-selection";
 import {
     ScaleLogarithmic as d3LogScale,
@@ -120,6 +119,7 @@ export class DotPlot implements IVisual {
     private static AxisSelector: ClassAndSelector = createClassAndSelector("axisGraphicsContext");
     private static XAxisSelector: ClassAndSelector = createClassAndSelector("x axis");
     private static CircleSelector: ClassAndSelector = createClassAndSelector("circleSelector");
+    private static TickSelector: ClassAndSelector = createClassAndSelector("tick");
     private static TickTextSelector: ClassAndSelector = createClassAndSelector("tick text");
     private static XAxisLabelSelector: ClassAndSelector = createClassAndSelector("xAxisLabel");
 
@@ -547,6 +547,7 @@ export class DotPlot implements IVisual {
 
             const behaviorOptions: DotplotBehaviorOptions = {
                 columns: dotGroupSelection,
+                xAxisTicks: this.xAxisSelection.selectAll<SVGGElement, number>(`g${DotPlot.TickSelector.selectorName}`),
                 clearCatcher: this.clearCatcher,
                 isHighContrastMode: this.colorHelper.isHighContrast,
                 dataPoints: this.data.dataGroups,
@@ -597,6 +598,8 @@ export class DotPlot implements IVisual {
                         .style("font-style", this.formattingSettings.labels.font.italic.value ? "italic" : "normal")
                         .style("font-weight", this.formattingSettings.labels.font.bold.value ? "bold" : "normal")
                         .style("text-decoration", this.formattingSettings.labels.font.underline.value ? "underline" : "none");
+
+                    this.removeLabelsOverlappingDots(labels);
                 }
             }
             else {
@@ -714,6 +717,25 @@ export class DotPlot implements IVisual {
         };
     }
 
+    private removeLabelsOverlappingDots(labels: d3Selection<SVGTextElement, DotPlotDataGroup, SVGGElement, unknown>): void {
+        // Dots in a column share one x-range, so a single rect per column stands in for all its dots.
+        const dotRects: DOMRect[] = this.dotPlot
+            .selectAll<SVGGElement, DotPlotDataGroup>(DotPlot.PlotGroupSelector.selectorName)
+            .nodes()
+            .map((group: SVGGElement) => group.getBoundingClientRect());
+
+        const overlappingLabels: SVGTextElement[] = labels.nodes().filter((label: SVGTextElement) => {
+            const labelRect: DOMRect = label.getBoundingClientRect();
+
+            return dotRects.some((dotRect: DOMRect) => labelRect.left < dotRect.right
+                && labelRect.right > dotRect.left
+                && labelRect.top < dotRect.bottom
+                && labelRect.bottom > dotRect.top);
+        });
+
+        overlappingLabels.forEach((label: SVGTextElement) => label.remove());
+    }
+
     private clear(): void {
         this.dotPlot
             .selectAll("*")
@@ -810,10 +832,8 @@ export class DotPlot implements IVisual {
                 this.data.maxLabelWidth / DotPlot.MiddleLabelWidth,
                 height));
 
-        const xAxis: d3Axis<any> = this.xAxisProperties.axis.tickFormat(function (d) { return d.x; });
-
         this.xAxisSelection
-            .call(xAxis)
+            .call(this.xAxisProperties.axis)
             .selectAll(`g${DotPlot.TickTextSelector.selectorName}`)
             .style("fill", this.formattingSettings.categoryAxis.labelColor.value.value);
 
@@ -824,13 +844,12 @@ export class DotPlot implements IVisual {
                 .style("stroke", this.formattingSettings.categoryAxis.labelColor.value.value);
         }
 
+        this.xAxisSelection
+            .selectAll(`${DotPlot.TickTextSelector.selectorName} title`)
+            .remove();
+
+        // A hidden axis renders empty tick text, which has no geometry to hover and no a11y presence.
         if (this.formattingSettings.categoryAxis.show.value) {
-            this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
-                .text((index: number) => {
-                    return this.data.dataGroups[index]
-                        && this.data.dataGroups[index].category.value;
-                });
-        } else {
             this.xAxisSelection.selectAll(DotPlot.TickTextSelector.selectorName)
                 .append("title")
                 .text((index: number) => {
